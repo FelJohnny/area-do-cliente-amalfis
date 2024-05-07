@@ -6,6 +6,7 @@ class Services{
         }
 
     //-----------READ--------------//
+
     async pegaTodosRegistros(){
         return model[this.nomeModel].findAll();
     }

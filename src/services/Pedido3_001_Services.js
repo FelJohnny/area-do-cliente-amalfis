@@ -5,7 +5,7 @@ class Pedido3_001_Services extends Services{
         super('Pedido3_001')
     }
 
-    async pegaItensPorPedidoService(numero){
+    async pegaItensExpedidosPorPedido_Service(numero){
         const retorno = await model.Pedido3_001.findAll({
             attributes:['numero', 'codigo', 'tam', 'cor','caixa', 'qtde', 'qtde_f', 'deposito'],
             where: {numero: numero},

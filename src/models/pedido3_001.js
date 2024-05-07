@@ -8,6 +8,7 @@ module.exports = (sequelize, DataTypes) => {
     static associate(models) {
       Pedido3_001.belongsTo(models.Pedido_001,{
         foreignKey:'numero',
+        as:'detalhes_pedido'
       })
     }
   }

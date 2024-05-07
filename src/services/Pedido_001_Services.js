@@ -1,31 +1,89 @@
-const Services = require('./Services.js')
+const Services = require('./Services.js');
 const model = require('../models/index.js');
-class Pedido_001_Services extends Services{
-    constructor(){
-        super('Pedido_001')
+
+class Pedido_001_Services extends Services {
+    constructor() {
+        super('Pedido_001');
     }
 
-    async pegaPedidosPorCodCliService(codcli){
-        const retorno = await model.Pedido_001.findAll({
+    async pegaPedidosPorCodCli_Service(codcli, infoLimit,limit) {
+        const pedidos = await model.Pedido_001.findAll({
             attributes:['codcli', 'numero', 'ped_cli', 'codrep', 'dt_emissao', 'dt_fatura', 'dt_saida', 'entrega', 'nota', 'deposito'],
-            where: {codcli: codcli},
-            include:[{
-                as: 'itens_pedido',
-                model: model.Pedido3_001,
-                attributes:['codigo','tam','cor','qtde','qtde_f'],
-            }]
-        })
-        
-        if(retorno.length === 0){
-            console.log('registro não encontrado na base de dados');
-            return { error:true, retorno: retorno };
-        }else{
-            //dado
-            console.log('registro foi encontrado na base de dados');
-            return { retorno: retorno,error:false };
+            where: { codcli: codcli },
+            offset: Number(infoLimit),
+            limit:Number(limit),
+            order:[['numero','DESC']]
+        });
 
+        // Array para armazenar os números dos pedidos Encontrados
+        const pedidosEncontrados = pedidos.map(pedido => pedido.numero);
+
+        // Consulta para buscar os itens do pedido usando os números dos pedidosEncontrados
+        const itensPedido = await model.Ped_iten_001.findAll({
+            attributes:['numero', 'codigo', 'tam', 'cor','qtde', 'qtde_f', 'preco'],
+            where: { numero: pedidosEncontrados },
+            order:[
+                ['codigo','ASC'],
+                ['tam','ASC']
+            ],
+            include:[{
+                model: model.Produto_001,
+                as:'detalhes_produto',
+                attributes:['descricao','descricao2','unidade','estoque'],
+            }]
+        });
+
+        // Adicionando os itens de pedido aos resultados dos pedidos
+        const pedidosComItens = pedidos.map(pedido => {
+            pedido.dataValues.itens_pedido = itensPedido.filter(item => item.numero === pedido.numero);
+            return pedido;
+        });
+
+        if (pedidosComItens.length === 0) {
+            console.log('Nenhum registro encontrado na base de dados.');
+            return { error: true, retorno: pedidosComItens };
+        } else {
+            console.log('Registros encontrados na base de dados.');
+            return { retorno: pedidosComItens, error: false };
+        }
+    }
+
+    async pegaUmPedidoPorCodCli_Service(codcli, pedido){
+        const pedidos = await model.Pedido_001.findAll({
+            attributes:['codcli', 'numero', 'ped_cli', 'codrep', 'dt_emissao', 'dt_fatura', 'dt_saida', 'entrega', 'nota', 'deposito'],
+            where: { codcli: codcli,numero: pedido },
+            
+        });
+
+        // Consulta para buscar os itens do pedido usando os números dos pedidosEncontrados
+        const itensPedido = await model.Ped_iten_001.findAll({
+            attributes:['numero', 'codigo', 'tam', 'cor','qtde', 'qtde_f', 'preco'],
+            where: { numero: pedido },
+            order:[
+                ['codigo','ASC'],
+                ['tam','ASC'],
+            ],
+            include:[{
+                model: model.Produto_001,
+                as:'detalhes_produto',
+                attributes:['descricao','descricao2','unidade','estoque'],
+            }]
+        });
+
+        // Adicionando os itens de pedido aos resultados dos pedidos
+        const pedidosComItens = pedidos.map(pedido => {
+            pedido.dataValues.itensPedido = itensPedido.filter(item => item.numero === pedido.numero);
+            return pedido;
+        });
+
+        if (pedidosComItens.length === 0) {
+            console.log('Nenhum registro encontrado na base de dados.');
+            return { error: true, retorno: pedidosComItens };
+        } else {
+            console.log('Registros encontrados na base de dados.');
+            return { retorno: pedidosComItens, error: false };
         }
     }
 }
 
-module.exports= Pedido_001_Services;
+module.exports = Pedido_001_Services;

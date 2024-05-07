@@ -5,6 +5,6 @@ const pedido3_001_controller = new Pedido3_001_Controller()
 
 const route = Router();
 
-route.get('/api/pedido/:numero',(req, res)=>{pedido3_001_controller.pegaItensPorPedidoController(req,res)} )
+route.get('/api/pedido/:numero',(req, res)=>{pedido3_001_controller.pegaItensExpedidosPorPedido_Controller(req,res)} )
 
 module.exports = route;

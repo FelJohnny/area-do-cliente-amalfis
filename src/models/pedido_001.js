@@ -8,6 +8,10 @@ module.exports = (sequelize, DataTypes) => {
     static associate(models) {
       Pedido_001.hasMany(models.Pedido3_001,{
         foreignKey: 'numero',
+        as:'itens_expedidos'
+      })
+      Pedido_001.hasMany(models.Ped_iten_001,{
+        foreignKey: 'numero',
         as:'itens_pedido'
       })
     }
