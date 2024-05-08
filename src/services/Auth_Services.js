@@ -14,10 +14,10 @@ class Auth_Services extends Services{
             attributes:['codcli','nome','email','telefone','cnpj','num_rg']
         })
         if(retorno === null){
-            console.log('email não encontrado na base de dados');
+            console.log('ERRO: email não encontrado na base de dados');
             return {status:false, retorno: retorno};
         }else{
-            console.log('email foi encontrado na base de dados');
+            console.log('SUCESSO: email foi encontrado na base de dados');
             return {status:true, retorno: retorno};
         }
     }
@@ -28,13 +28,12 @@ class Auth_Services extends Services{
             where: {email: email}
         });
         if(retorno === null){
-            console.log('email não encontrado na base de dados');
+            console.log('ERRO: email não encontrado na base de dados');
             return {status:false, retorno: retorno};
         }
 
         // Verifica se o CNPJ retornado do banco é igual ao CNPJ passado como parâmetro
         if (retorno.cnpj === cnpj) {
-            console.log('Senha Confere');
             return {status:true, retorno: retorno};
         } else {
             console.log('Senha não confere');

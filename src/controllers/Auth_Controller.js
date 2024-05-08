@@ -27,7 +27,6 @@ class Auth_Controller extends Controller{
         
         let checkSenha ='';
         if(emailExist.status){
-            console.log("email existe");
             checkSenha = await auth_services.validaSenhaUsuario_Services(email, senha);
         }
         if(!checkSenha.status){
@@ -38,14 +37,12 @@ class Auth_Controller extends Controller{
                 const secret = process.env.SECRET_LOGIN;
                 let token=''
                 const TokenExpirationTime = '1d'
-                console.log(checkSenha.nome);
                 if(emailExist.status){
                 token = jwt.sign({
                     codcli: checkSenha.retorno.codcli,
                     nome:checkSenha.retorno.nome,
                 },secret,{ expiresIn: TokenExpirationTime })
             }
-            console.log(token);
             return res.status(200).json({message:"Autentiação realizada com sucesso",token})
         } catch (error) {
             console.log(error);
