@@ -18,6 +18,10 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey:'status',
         as: 'situacao_pedido'
       })
+      Pedido_001.belongsTo(models.Entidade_001,{
+        foreignKey:'codcli',
+        as:'info_cliente'
+      })
     }
   }
   Pedido_001.init({

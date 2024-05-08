@@ -9,15 +9,22 @@ class Pedido_001_Services extends Services {
     async pegaPedidosPorCodCli_Service(codcli, infoLimit,limit) {
         const pedidos = await model.Pedido_001.findAll({
             attributes:['codcli', 'numero','ped_cli', 'codrep', 'dt_emissao', 'dt_fatura', 'dt_saida', 'entrega', 'nota', 'deposito'],
-            include:[{
-                model: model.Sitprod_001,
-                as:'situacao_pedido',
-                attributes:['codigo','descricao'],
-            }],
+            include:[
+                {
+                    model: model.Entidade_001,
+                    as: 'info_cliente',
+                    attributes:['nome','email','telefone','cnpj','num_rg'],
+                },
+                {
+                    model: model.Sitprod_001,
+                    as:'situacao_pedido',
+                    attributes:['codigo','descricao'],
+                }
+            ],
             where: { codcli: codcli },
             offset: Number(infoLimit),
             limit:Number(limit),
-            order:[['numero','DESC']]
+            order:[['numero','DESC']],
         });
 
         // Array para armazenar os números dos pedidos Encontrados
@@ -57,11 +64,18 @@ class Pedido_001_Services extends Services {
         const pedidos = await model.Pedido_001.findAll({
             attributes:['codcli', 'numero', 'ped_cli', 'codrep', 'dt_emissao', 'dt_fatura', 'dt_saida', 'entrega', 'nota', 'deposito'],
             where: { codcli: codcli,numero: pedido },
-            include:[{
-                model: model.Sitprod_001,
-                as:'situacao_pedido',
-                attributes:['codigo','descricao'],
-            }],
+            include:[
+                {
+                    model: model.Entidade_001,
+                    as: 'info_cliente',
+                    attributes:['nome','email','telefone','cnpj','num_rg'],
+                },
+                {
+                    model: model.Sitprod_001,
+                    as:'situacao_pedido',
+                    attributes:['codigo','descricao'],
+                }
+            ],
         });
 
         // Consulta para buscar os itens do pedido usando os números dos pedidosEncontrados
