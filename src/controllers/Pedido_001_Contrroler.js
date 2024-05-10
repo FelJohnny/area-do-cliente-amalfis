@@ -15,7 +15,7 @@ class Pedido_001_Controller extends Controller{
         //PAGINACAO
         const { page = 1 } = req.query;
         //limite de registros em cada pagina
-        const limit = 5;
+        const limit = 9;
         var lastPage = 1;
   
         //consultando quantidade de pedidos encontrados por codcli

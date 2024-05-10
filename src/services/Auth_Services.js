@@ -23,7 +23,7 @@ class Auth_Services extends Services{
     }
 
     async validaSenhaUsuario_Services(email, cnpj){
-        const retorno = await model.Entidade_001.findOne({
+        const retorno = await model.Entidade_001.findAll({
             attributes:['codcli','nome','email','telefone','cnpj','num_rg'],
             where: {email: email}
         });
@@ -33,12 +33,23 @@ class Auth_Services extends Services{
         }
 
         // Verifica se o CNPJ retornado do banco é igual ao CNPJ passado como parâmetro
-        if (retorno.cnpj === cnpj) {
-            return {status:true, retorno: retorno};
-        } else {
-            console.log('Senha não confere');
-            return {status:false}
+        let check = false
+        let data 
+        retorno.forEach(user => {
+            if (user.dataValues.cnpj == cnpj) {
+                data = user.dataValues;
+                check = true;
+                
+            } else {
+                console.log('Senha não confere');
+            }
+        });
+        if(check){
+            return {status:true, retorno: data};
+        }else{
+            return{status: false}
         }
+        //return {status:false}
 
     }
 }

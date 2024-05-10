@@ -30,14 +30,14 @@ class Auth_Controller extends Controller{
             checkSenha = await auth_services.validaSenhaUsuario_Services(email, senha);
         }
         if(!checkSenha.status){
-            return res.status(401).json({message:"E-mail ou Senha incorreta. Tente novamente!"});
+            return res.status(401).json({message:"E-mail ou Senha incorreta"});
         }
 
         try {
                 const secret = process.env.SECRET_LOGIN;
                 let token=''
                 const TokenExpirationTime = '1d'
-                if(emailExist.status){
+                if(checkSenha.status){
                 token = jwt.sign({
                     codcli: checkSenha.retorno.codcli,
                     nome:checkSenha.retorno.nome,
