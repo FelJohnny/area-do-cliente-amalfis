@@ -2,6 +2,9 @@
 const Controller = require('./Controller.js');
 const Pedido_001_Services = require('../services/Pedido_001_Services.js');
 const model = require('../models/index.js')
+const nodemailer = require("nodemailer") ;
+const dotenv = require('dotenv');
+dotenv.config();
 const pedido_001_services = new Pedido_001_Services();
 
 class Pedido_001_Controller extends Controller{
@@ -65,6 +68,50 @@ class Pedido_001_Controller extends Controller{
         }
       } catch (erro){
         return res.status(500).json({ message: `erro ao buscar registro, mensagem do erro: ${erro}` });
+      }
+    }
+
+    async enviaPedidoEmail_Controller(req,res){
+      const {codcli, pedido } = req.params;
+
+      try{
+        //validando existencia de pedido
+        const validaPedido = await pedido_001_services.pegaUmPedidoPorCodCli_Service(codcli,pedido);
+        if(validaPedido.retorno.length === 0){
+          return res.status(400).json({message:`não foi possivel encontrar o registro: ${codcli}`});
+        }
+        const transporter = nodemailer.createTransport({
+          host:process.env.HOST,
+          port: process.env.PORT,
+          secure: false,
+          auth: {
+            user: process.env.EMAIL_FROM,
+            pass: process.env.PASS
+          }
+        })
+        
+        const mailOptions = {
+          from: process.env.EMAIL_FROM,
+          to: process.env.RECEBEEMAIL ,
+          subject: "Amalfis Cliente - Felipe Johnny ",
+          html:`<h1>Amalfis Área do Cliente</h1>
+          <h2>teste</h2>
+          <p>teste</p>`,
+        };
+
+        await transporter.sendMail(mailOptions,
+          (error, info)=>{
+            if (error){
+              console.log(error);
+            } else {
+              console.log("Email envia com sucesso " + info.response);
+            }
+          }
+        )
+
+      }catch(erro){
+        return res.status(500).json({ message: `erro ao buscar registro, mensagem do erro: ${erro}` });
+
       }
     }
 }
