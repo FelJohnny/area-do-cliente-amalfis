@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f9f9f9;
+    }
+    .email-container {
+      width: 100%;
+      max-width: 400px;
+      margin: 0 auto;
+      border: 1px solid #ddd;
+      padding: 20px;
+      border-radius: 10px;
+      background-color: #fff;
+    }
+    .header {
+      background-color: #01426A;
+      text-align: center;
+      padding: 20px;
+      border-top-left-radius: 10px;
+      border-top-right-radius: 10px;
+    }
+    .logo img {
+      max-width: 100%;
+      height: auto;
+    }
+    h1 {
+      text-align: center;
+      color: #01426A;
+      margin-bottom: 20px;
+    }
+    h2 {
+      margin: 10px 0;
+    }
+    .content span {
+      display: block;
+      font-size: 20px;
+      margin: 10px 0;
+    }
+    .titulo {
+      font-weight: bold;
+    }
+    .rodape {
+      background-color: #01426A;
+      color: white;
+      text-align: center;
+      padding: 10px;
+      border-bottom-left-radius: 10px;
+      border-bottom-right-radius: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="email-container">
+    <div class="header">
+      <div class="logo">
+        <img src="cid:logo" alt="Logo">
+      </div>
+    </div>
+    <h1>Área do Cliente - Amalfis</h1>
+    <div class="content">
+      <h2>Olá, {{clientName}}</h2>
+      <h2>Segue atualizações do status do seu pedido:</h2>
+      <span class="titulo">Pedido:</span>
+      <span>{{ped_cli}}</span>
+      <span class="titulo">Data da emissão:</span>
+      <span>{{dt_emissao}}</span>
+      <span class="titulo">Situação do Pedido:</span>
+      <span>{{orderDetails}}</span>
+    </div>
+    <div class="rodape">
+      @Amalfis Uniformes e Vestimentas de Proteção
+    </div>
+  </div>
+</body>
+</html>

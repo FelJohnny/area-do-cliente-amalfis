@@ -4,6 +4,9 @@ const Pedido_001_Services = require('../services/Pedido_001_Services.js');
 const model = require('../models/index.js')
 const nodemailer = require("nodemailer") ;
 const dotenv = require('dotenv');
+const fs = require('fs');
+const path = require('path');
+
 dotenv.config();
 const pedido_001_services = new Pedido_001_Services();
 
@@ -72,9 +75,9 @@ class Pedido_001_Controller extends Controller{
     }
 
     async enviaPedidoEmail_Controller(req,res){
-      const {codcli, pedido } = req.params;
-
+      
       try{
+        const {codcli, pedido } = req.params;
         //validando existencia de pedido
         const validaPedido = await pedido_001_services.pegaUmPedidoPorCodCli_Service(codcli,pedido);
         if(validaPedido.retorno.length === 0){
@@ -83,34 +86,58 @@ class Pedido_001_Controller extends Controller{
         const transporter = nodemailer.createTransport({
           host:process.env.HOST,
           port: process.env.PORT,
-          secure: false,
+          secure: true,
           auth: {
             user: process.env.EMAIL_FROM,
             pass: process.env.PASS
           }
         })
-        
+
+        // Lendo o arquivo HTML
+        const emailTemplatePath = path.join(__dirname, '../views/emails/emailTemplate.html');
+        let emailTemplate = fs.readFileSync(emailTemplatePath, 'utf-8');
+
+        // Substituir os placeholders pelos valores reais
+        emailTemplate = emailTemplate.replace('{{clientName}}', validaPedido.retorno[0].info_cliente.nome);
+        emailTemplate = emailTemplate.replace('{{dt_emissao}}', validaPedido.retorno[0].dt_emissao);
+        if(validaPedido.retorno[0].situacao_pedido && validaPedido.retorno[0].ped_cli !== null){
+          emailTemplate = emailTemplate.replace('{{orderDetails}}',  validaPedido.retorno[0].situacao_pedido.descricao);
+          emailTemplate = emailTemplate.replace('{{ped_cli}}', validaPedido.retorno[0].ped_cli);
+        }else{
+          emailTemplate = emailTemplate.replace('{{orderDetails}}', 'AGUARDANDO ANALISE')
+          emailTemplate = emailTemplate.replace('{{ped_cli}}', 'N/C');
+        }
+
         const mailOptions = {
           from: process.env.EMAIL_FROM,
-          to: process.env.RECEBEEMAIL ,
-          subject: "Amalfis Cliente - Felipe Johnny ",
-          html:`<h1>Amalfis Área do Cliente</h1>
-          <h2>teste</h2>
-          <p>teste</p>`,
+          // to:validaPedido.retorno[0].info_cliente.email,
+          to: process.env.RECEBEEMAIL,
+          subject: `Amalfis Cliente - Situação pedido: ${validaPedido.retorno[0].ped_cli} `,
+          attachments: [
+            {
+              filename: 'logo.png',
+              path: path.join(__dirname, '../views/emails/logo.png'),
+              cid: 'logo'
+            }
+          ],
+          html:emailTemplate,
         };
 
         await transporter.sendMail(mailOptions,
           (error, info)=>{
             if (error){
               console.log(error);
+              return res.status(400).json({message:`não foi possivel enviar o email, Tente novamente ou contate o administrador do sistema`});
             } else {
               console.log("Email envia com sucesso " + info.response);
+              return res.status(200).json({message:`email enviado com sucesso para: ${validaPedido.retorno[0].info_cliente.email}`});
             }
           }
         )
 
       }catch(erro){
-        return res.status(500).json({ message: `erro ao buscar registro, mensagem do erro: ${erro}` });
+        console.log(erro);
+        return res.status(500).json({ message: `erro ao enviar e-mail` });
 
       }
     }
