@@ -97,48 +97,43 @@ class Pedido_001_Controller extends Controller{
         const emailTemplatePath = path.join(__dirname, '../views/emails/emailTemplate.html');
         let emailTemplate = fs.readFileSync(emailTemplatePath, 'utf-8');
 
+        const { nome, email } =validaPedido.retorno[0].info_cliente
+        const { dt_emissao, ped_cli, situacao_pedido, numero } = validaPedido.retorno[0]
+
         // Substituir os placeholders pelos valores reais
-        emailTemplate = emailTemplate.replace('{{clientName}}', validaPedido.retorno[0].info_cliente.nome);
-        emailTemplate = emailTemplate.replace('{{dt_emissao}}', validaPedido.retorno[0].dt_emissao);
-        if(validaPedido.retorno[0].situacao_pedido && validaPedido.retorno[0].ped_cli !== null){
-          emailTemplate = emailTemplate.replace('{{orderDetails}}',  validaPedido.retorno[0].situacao_pedido.descricao);
-          emailTemplate = emailTemplate.replace('{{ped_cli}}', validaPedido.retorno[0].ped_cli);
-        }else{
-          emailTemplate = emailTemplate.replace('{{orderDetails}}', 'AGUARDANDO ANALISE')
-          emailTemplate = emailTemplate.replace('{{ped_cli}}', 'N/C');
-        }
+        emailTemplate = emailTemplate.replace('{{clientName}}', nome || 'NÃO CADASTRADO');
+        emailTemplate = emailTemplate.replace('{{dt_emissao}}', dt_emissao || 'NÃO CADASTRADA');
+        emailTemplate = emailTemplate.replace('{{ped_cli}}', ped_cli || 'NÃO INFORMADO');
+        //O operador ?. permite acessar propriedades profundamente aninhadas de um objeto sem causar um erro se uma parte intermediária for null ou undefined.
+        emailTemplate = emailTemplate.replace('{{orderDetails}}',  situacao_pedido?.descricao || 'AGUARDANDO ANALISE');
 
-        const mailOptions = {
-          from: process.env.EMAIL_FROM,
-          // to:validaPedido.retorno[0].info_cliente.email,
-          to: process.env.RECEBEEMAIL,
-          subject: `Amalfis Cliente - Situação pedido: ${validaPedido.retorno[0].ped_cli} `,
-          attachments: [
-            {
-              filename: 'logo.png',
-              path: path.join(__dirname, '../views/emails/logo.png'),
-              cid: 'logo'
-            }
-          ],
-          html:emailTemplate,
-        };
-
-        await transporter.sendMail(mailOptions,
-          (error, info)=>{
-            if (error){
-              console.log(error);
-              return res.status(400).json({message:`não foi possivel enviar o email, Tente novamente ou contate o administrador do sistema`});
-            } else {
+        if(email){
+          const mailOptions = {
+            from: process.env.EMAIL_FROM,
+            // to: email,
+            to: process.env.RECEBEEMAIL,
+            subject: `Amalfis Cliente - Situação pedido: ${ped_cli || numero} `,
+            attachments: [
+              {
+                filename: 'logo.png',
+                path: path.join(__dirname, '../views/emails/logo.png'),
+                cid: 'logo'
+              }
+            ],
+            html:emailTemplate,
+          };
+          
+          try{
+            const info = await transporter.sendMail(mailOptions);
               console.log("Email envia com sucesso " + info.response);
-              return res.status(200).json({message:`email enviado com sucesso para: ${validaPedido.retorno[0].info_cliente.email}`});
-            }
+              return res.status(200).json({message:`email enviado com sucesso para: ${email}`});
+          }catch(e){
+            return res.status(500).json({ message: "Não foi possivel enviar o email, Tente novamente ou contate o administrador do sistema" });
           }
-        )
-
+        }
       }catch(erro){
-        console.log(erro);
-        return res.status(500).json({ message: `erro ao enviar e-mail` });
-
+        console.error('Erro ao enviar email:', erro);
+        return res.status(500).json({ message: `erro ao enviar e-mail`});
       }
     }
 }
