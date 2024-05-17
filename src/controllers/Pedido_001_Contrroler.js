@@ -70,7 +70,8 @@ class Pedido_001_Controller extends Controller{
           return res.status(200).json(pedidos);
         }
       } catch (erro){
-        return res.status(500).json({ message: `erro ao buscar registro, mensagem do erro: ${erro}` });
+        console.log(erro);
+        return res.status(500).json({ message: `erro ao buscar registro, mensagem do erro` });
       }
     }
 
@@ -134,6 +135,24 @@ class Pedido_001_Controller extends Controller{
       }catch(erro){
         console.error('Erro ao enviar email:', erro);
         return res.status(500).json({ message: `erro ao enviar e-mail`});
+      }
+    }
+
+    async pegaPedidosPorCodCliDatas_Controller(req,res){
+      try {
+        const { codcli,  } = req.params;
+        const { dataInicio, dataFim } = req.query;
+        const pedidos = await pedido_001_services.pegaPedidosPorCodCliDatas_Service(codcli,dataInicio, dataFim)
+        if(pedidos.length === 0){
+          return res.status(400).json({message:`não foi possivel encontrar o registro: ${codcli}`});
+        }else{
+          return res.status(200).json(pedidos);
+        }
+
+      } catch (error) {
+        console.log(error);
+        return res.status(500).json({ message: `erro ao buscar registro, mensagem do erro` });
+        
       }
     }
 }
