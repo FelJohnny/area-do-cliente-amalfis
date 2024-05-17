@@ -8,4 +8,4 @@ const route = Router();
 route.post('/api/auth/login',(req,res)=>{ auth_controller.LoginUsuario_Controller(req,res)});
 
 
-module.exports =route;
+module.exports = route;
