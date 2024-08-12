@@ -1,5 +1,5 @@
 const { Router } = require('express');
-const Auth_Controller = require('../controllers/Auth_Controller.js');
+const Auth_Controller = require('../controllers/sisplan_controllers/Auth_Controller.js');
 
 const auth_controller = new Auth_Controller();
 

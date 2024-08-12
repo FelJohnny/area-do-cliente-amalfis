@@ -1,5 +1,5 @@
-const Controller = require('./Controller.js');
-const Auth_Services = require('../services/Auth_Services.js')
+const Controller = require('../Controller.js');
+const Auth_Services = require('../../services/sisplan_services/Auth_Services.js')
 const jwt = require('jsonwebtoken');
 
 

@@ -1,5 +1,6 @@
-const Services = require('./Services.js');
-const model = require('../models/index.js');
+const Services = require('../Services.js');
+const db = require('../../models/index.js')
+
 const { Op } = require('sequelize');
 
 class Pedido_001_Services extends Services {
@@ -8,16 +9,16 @@ class Pedido_001_Services extends Services {
     }
 
     async pegaPedidosPorCodCli_Service(codcli, infoLimit,limit) {
-        const pedidos = await model.Pedido_001.findAll({
+        const pedidos = await db.sisplan.Pedido_001.findAll({
             attributes:['codcli', 'numero','ped_cli', 'codrep', 'dt_emissao', 'dt_fatura', 'dt_saida', 'entrega', 'nota', 'deposito'],
             include:[
                 {
-                    model: model.Entidade_001,
+                    model: db.sisplan.Entidade_001,
                     as: 'info_cliente',
                     attributes:['nome','email','telefone','cnpj','num_rg'],
                 },
                 {
-                    model: model.Sitprod_001,
+                    model: db.sisplan.Sitprod_001,
                     as:'situacao_pedido',
                     attributes:['codigo','descricao'],
                 }
@@ -32,7 +33,7 @@ class Pedido_001_Services extends Services {
         const pedidosEncontrados = pedidos.map(pedido => pedido.numero);
 
         // Consulta para buscar os itens do pedido usando os números dos pedidosEncontrados
-        const itensPedido = await model.Ped_iten_001.findAll({
+        const itensPedido = await db.sisplan.Ped_iten_001.findAll({
             attributes:['numero', 'codigo', 'tam', 'cor','qtde', 'qtde_f', 'preco'],
             where: { numero: pedidosEncontrados },
             order:[
@@ -40,7 +41,7 @@ class Pedido_001_Services extends Services {
                 ['tam','ASC']
             ],
             include:[{
-                model: model.Produto_001,
+                model: db.sisplan.Produto_001,
                 as:'detalhes_produto',
                 attributes:['descricao','descricao2','unidade','estoque'],
             }]
@@ -62,17 +63,17 @@ class Pedido_001_Services extends Services {
     }
 
     async pegaUmPedidoPorCodCli_Service(codcli, pedido){
-        const pedidos = await model.Pedido_001.findAll({
+        const pedidos = await db.sisplan.Pedido_001.findAll({
             attributes:['codcli', 'numero', 'ped_cli', 'codrep', 'dt_emissao', 'dt_fatura', 'dt_saida', 'entrega', 'nota', 'deposito'],
             where: { codcli: codcli,numero: pedido },
             include:[
                 {
-                    model: model.Entidade_001,
+                    model: db.sisplan.Entidade_001,
                     as: 'info_cliente',
                     attributes:['nome','email','telefone','cnpj','num_rg'],
                 },
                 {
-                    model: model.Sitprod_001,
+                    model: db.sisplan.Sitprod_001,
                     as:'situacao_pedido',
                     attributes:['codigo','descricao'],
                 }
@@ -80,7 +81,7 @@ class Pedido_001_Services extends Services {
         });
 
         // Consulta para buscar os itens do pedido usando os números dos pedidosEncontrados
-        const itensPedido = await model.Ped_iten_001.findAll({
+        const itensPedido = await db.sisplan.Ped_iten_001.findAll({
             attributes:['numero', 'codigo', 'tam', 'cor','qtde', 'qtde_f', 'preco'],
             where: { numero: pedido },
             order:[
@@ -88,7 +89,7 @@ class Pedido_001_Services extends Services {
                 ['tam','ASC'],
             ],
             include:[{
-                model: model.Produto_001,
+                model: db.sisplan.Produto_001,
                 as:'detalhes_produto',
                 attributes:['descricao','descricao2','unidade','estoque'],
             }]
@@ -110,16 +111,16 @@ class Pedido_001_Services extends Services {
     }
 
     async pegaPedidosPorCodCliDatas_Service(codcli, dataInicio, dataFim) {
-        const pedidos = await model.Pedido_001.findAll({
+        const pedidos = await db.sisplan.Pedido_001.findAll({
             attributes:['codcli', 'numero','ped_cli', 'codrep', 'dt_emissao', 'dt_fatura', 'dt_saida', 'entrega', 'nota', 'deposito'],
             include:[
                 {
-                    model: model.Entidade_001,
+                    model: db.sisplan.Entidade_001,
                     as: 'info_cliente',
                     attributes:['nome','email','telefone','cnpj','num_rg'],
                 },
                 {
-                    model: model.Sitprod_001,
+                    model: db.sisplan.Sitprod_001,
                     as:'situacao_pedido',
                     attributes:['codigo','descricao'],
                 }
@@ -137,7 +138,7 @@ class Pedido_001_Services extends Services {
         const pedidosEncontrados = pedidos.map(pedido => pedido.numero);
 
         // Consulta para buscar os produtos do pedido usando os números dos pedidosEncontrados
-        const itensPedido = await model.Ped_iten_001.findAll({
+        const itensPedido = await db.sisplan.Ped_iten_001.findAll({
             attributes:['numero', 'codigo', 'tam', 'cor','qtde', 'qtde_f', 'preco'],
             where: { numero: pedidosEncontrados },
             order:[
@@ -145,7 +146,7 @@ class Pedido_001_Services extends Services {
                 ['tam','ASC']
             ],
             include:[{
-                model: model.Produto_001,
+                model: db.sisplan.Produto_001,
                 as:'detalhes_produto',
                 attributes:['descricao','descricao2','unidade','estoque'],
             }]

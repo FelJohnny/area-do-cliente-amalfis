@@ -1,6 +1,6 @@
 
-const Controller = require('./Controller');
-const Pedido3_001_Services = require('../services/Pedido3_001_Services.js');
+const Controller = require('../Controller.js');
+const Pedido3_001_Services = require('../../services/sisplan_services/Pedido3_001_Services.js');
 
 const pedido3_001_services = new Pedido3_001_Services();
 
