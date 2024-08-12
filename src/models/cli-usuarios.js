@@ -17,7 +17,7 @@ module.exports = (sequelize, DataTypes) => {
     contato: DataTypes.STRING
   }, {
     sequelize,
-    modelName: 'usuarios',
+    modelName: 'Usuario',
     tableName:'usuarios',
     defaultScope: {
       attributes: {
