@@ -1,36 +1,30 @@
 class Controller {
-  constructor(propsServices, campos) {
-    this.propsServices = propsServices;
+  constructor(nomeModel, campos) {
+    this.nomeModel = nomeModel;
+    this.camposObrigatorios = campos;
+    this.camposVazios = [];
   }
 
-  //-------------------------------------READ-------------------------------------//
+   async allowNull(req, res) {
+    this.camposVazios = [] //serve para nao acumular valores duplicados na array
+    const todosCamposTrue = this.camposObrigatorios.every((campo) => {
 
-  async pegaTodosController(req, res) {
-    try {
-      const listaDeRegistro = await this.propsServices.pegaTodosRegistros();
-      return res.status(200).json(listaDeRegistro);
-    } catch (e) {
-      console.log(e);
-      return res.status(500).json({ message: `erro ao buscar registro, mensagem do erro: ${e}` });
-    }
-  }
-
-  //-------------------------------------READ-POR-ID-------------------------------------//
-
-  async pegaUmRegistroPorIdController(req, res) {
-    const { numero } = req.params;
-    try {
-      
-      const umRegistro = await this.propsServices.pegaRegistroPorDado(numero);
-      if(umRegistro == null){
-        return res.status(400).json({message:`não foi possivel encontrar o registro: ${numero}`,resposta:umRegistro});
-      }else{
-        return res.status(200).json(umRegistro);
+      if (req.body[campo] == null) {
+        this.camposVazios.push(campo)
       }
-    } catch (erro){
-      return res.status(500).json({ message: `erro ao buscar registro, mensagem do erro: ${erro}` });
-    }
+      
+      return req.body[campo];
+    });
+    
+    if (todosCamposTrue){
+      return { status: true };
+    } 
+    else{
+      return { status: false, campos: this.camposVazios };
+    } 
   }
+  //-------------------------------------READ-------------------------------------//
+  
 }
 
 module.exports = Controller;
