@@ -50,7 +50,34 @@ class Role_Controller extends Controller{
           }
     }
 
+    async pegaRolePorId_Controller(req,res){
+        const { id } = req.params;        
+        try {
+            const role = await role_services.pegaRolePorId_Services(id);
+            if(role == null){
+              return res.status(400).json({message:`não foi possivel encontrar o registro: ${id}`,role});
+            }else{
+              return res.status(200).json(role);
+            }
+          } catch (e){
+            console.log(e);
+            return res.status(500).json({ message: `erro ao buscar registro, contate o administrador do sistema` });
+          }
+    }
     
+    async deletaRolePorId_Controller(req,res){
+        const { id } = req.params;
+        try {
+            const role = await role_services.deletaRolePorId_Services(id);
+            if(role === 0){
+                return res.status(400).json({message: `id ${id} não encontrado`,role,error:true})
+            }else{
+                return res.status(200).json({ message: `id ${id} deletado`,role,error:false });
+            }
+        } catch (error) {
+            return res.status(500).json({message: `erro ao buscar registro, contate o administrador do sistema`});
+        }
+    }
 }
 
 module.exports = Role_Controller;

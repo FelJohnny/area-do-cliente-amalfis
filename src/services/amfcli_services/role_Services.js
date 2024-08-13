@@ -29,7 +29,15 @@ class Role_Services extends Services{
     }
 
     async pegaTodosRole_Services(){
-        return amalfisCli[this.nomeModel].findAll()
+        return await amalfisCli[this.nomeModel].findAll();
+    }
+
+    async pegaRolePorId_Services(id){
+        return amalfisCli[this.nomeModel].findByPk(id)
+    }
+
+    async deletaRolePorId_Services(id){
+        return amalfisCli[this.nomeModel].destroy({ where: { id: id } });
     }
 }
 

@@ -1,6 +1,6 @@
 const { Router } = require('express');
-const Pedido3_001_Controller = require('../controllers/sisplan_controllers/Pedido3_001_Contrroler.js')
-const checkTokenLogin = require('../../middlewares/checkTokenLogin.js')
+const Pedido3_001_Controller = require('../../controllers/sisplan_controllers/Pedido3_001_Contrroler.js')
+const checkTokenLogin = require('../../../middlewares/checkTokenLogin.js')
 
 const pedido3_001_controller = new Pedido3_001_Controller()
 
