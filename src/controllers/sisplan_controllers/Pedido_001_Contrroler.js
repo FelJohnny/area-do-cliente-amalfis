@@ -1,7 +1,7 @@
 
 const Controller = require('../Controller.js');
 const Pedido_001_Services = require('../../services/sisplan_services/Pedido_001_Services.js');
-const db = require('../../models/index.js')
+const {sisplan} = require('../../models/index.js')
 const nodemailer = require("nodemailer") ;
 const dotenv = require('dotenv');
 const fs = require('fs');
@@ -25,7 +25,7 @@ class Pedido_001_Controller extends Controller{
         var lastPage = 1;
   
         //consultando quantidade de pedidos encontrados por codcli
-        const countPedidos = await db.sisplan.Pedido_001.count({where:{codcli: codcli}})
+        const countPedidos = await sisplan.Pedido_001.count({where:{codcli: codcli}})
 
         //valida contagem
         if(countPedidos !== 0){

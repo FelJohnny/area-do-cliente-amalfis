@@ -9,9 +9,6 @@ module.exports = {
         type: Sequelize.UUID,
         defaultValue: Sequelize.UUID
       },
-      colecao: {
-        type: Sequelize.STRING
-      },
       nome: {
         type: Sequelize.STRING
       },
