@@ -10,7 +10,14 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey:'codcli',
         as:'pedidos_cli',
       })
+
+      Entidade_001.hasMany(models.Grupo_cli_001,{
+        foreignKey:'grupo',
+        as:'cli_grupo',
+      })
     }
+
+    
   }
   Entidade_001.init({
     codcli: {

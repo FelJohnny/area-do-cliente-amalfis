@@ -22,6 +22,10 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey:'codcli',
         as:'info_cliente'
       })
+      Pedido_001.belongsTo(models.Colecao_001,{
+        foreignKey:'colecao',
+        as:'colecao_pedido'
+      })
     }
   }
   Pedido_001.init({
@@ -38,7 +42,8 @@ module.exports = (sequelize, DataTypes) => {
     entrega: DataTypes.DATE,
     nota: DataTypes.STRING,
     deposito: DataTypes.STRING,
-    status: DataTypes.STRING
+    status: DataTypes.STRING,
+    colecao: DataTypes.STRING
   }, {
     sequelize,
     modelName: 'Pedido_001',

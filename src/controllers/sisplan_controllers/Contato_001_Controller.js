@@ -5,7 +5,7 @@ const {sisplan} = require('../../models/index.js')
 const contato_001_services = new Contato_001_Services()
 class Contato_001_Controller extends Controller{
     constructor(){
-        super()
+        super(contato_001_services)
     }
 
     async pegaContatoPorCodCli_Controller(req,res){
