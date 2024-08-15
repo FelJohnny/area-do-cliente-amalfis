@@ -11,17 +11,23 @@ module.exports = (sequelize, DataTypes) => {
         as: 'usuario_roles',
         foreignKey:'usuario_id',
       })
-
       usuarios.belongsToMany(models.Permissao,{
         through: models.usuarios_permissoes,
         as: 'usuario_permissoes',
         foreignKey:'usuario_id',
       })
+      usuarios.hasMany(models.Clientes_usuarios,{
+        foreignKey:'usuario_id',
+        as:'usuario_clientes',
+      })
+      usuarios.hasMany(models.Colecao_usuarios,{
+        foreignKey:'id',
+        as:'usuario_colecoes',
+      })
     }
   }
   usuarios.init({
     nome: DataTypes.STRING,
-    colecao: DataTypes.STRING,
     email: DataTypes.STRING,
     senha: DataTypes.STRING,
     contato: DataTypes.STRING

@@ -5,24 +5,22 @@ class Controller {
     this.camposVazios = [];
   }
 
-   async allowNull(req, res) {
-    this.camposVazios = [] //serve para nao acumular valores duplicados na array
-    const todosCamposTrue = this.camposObrigatorios.every((campo) => {
-
-      if (req.body[campo] == null) {
-        this.camposVazios.push(campo)
+  async allowNull(req, res) {
+    this.camposVazios = []; // serve para nao acumular valores duplicados na array
+    
+    this.camposObrigatorios.forEach((campo) => {
+      if (req.body[campo] == null || req.body[campo] === '') {
+        this.camposVazios.push(campo);
       }
-      
-      return req.body[campo];
     });
     
-    if (todosCamposTrue){
+    if (this.camposVazios.length === 0) {
       return { status: true };
-    } 
-    else{
+    } else {
       return { status: false, campos: this.camposVazios };
-    } 
+    }
   }
+  
   //-------------------------------------READ-------------------------------------//
   
 }
