@@ -7,7 +7,7 @@ module.exports = (sequelize, DataTypes) => {
 
     static associate(models) {
       Clientes_usuarios.belongsTo(models.Usuario,{
-        foreignKey:'id',
+        foreignKey:'usuario_id',
         as:'clientes_usuario',
       })
     }

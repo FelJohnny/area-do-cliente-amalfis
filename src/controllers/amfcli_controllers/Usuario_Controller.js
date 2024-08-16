@@ -2,7 +2,7 @@ const Controller = require('../Controller.js')
 const Usuario_services = require('../../services/amfcli_services/Usuario_Services.js')
 const usuario_services = new Usuario_services();
 const bcrypt = require('bcrypt');
-const camposObrigatorios = ['nome','colecao','email','senha','contato','roles_id','permissoes_id']
+const camposObrigatorios = ['nome','colecao','email','senha','contato','roles_id','permissoes_id',]
 
 class Usuario_Controller extends Controller{
     constructor(){
@@ -21,7 +21,7 @@ class Usuario_Controller extends Controller{
                 const userExist = await usuario_services.pegaUsuarioPorEmail(email)
                 if(userExist.status){
                     return res.status(422).json({
-                        message:"por favor, utilize outro e-mail!",
+                        message:"O e-mail informado já está em uso!",
                         error:true
                     });
                 }
@@ -39,7 +39,7 @@ class Usuario_Controller extends Controller{
                     });
                 }else{
                     return res.status(500).json({ 
-                        message: `erro ao cadastrar o usuario`,
+                        message: createUser.message || `erro ao cadastrar o usuario`,
                         error:true
                     });
                 }
