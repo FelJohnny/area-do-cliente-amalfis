@@ -3,10 +3,13 @@ const {amalfisCli, sequelizeAmalfisCli } = require('../../models/index.js')
 const { Op } = require('sequelize');
 const { validate: isUuid } = require('uuid');
 const uuid = require('uuid')
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+
 
 class Usuario_Services extends Services{
 
-    async pegaUsuarioPorEmail(email){
+    async pegaUsuarioPorEmail_Services(email){
         const retorno = await amalfisCli.Usuario.findOne({where: {email: email}})
         if(retorno === null){
             console.log('email não encontrado na base de dados');
@@ -16,6 +19,44 @@ class Usuario_Services extends Services{
             return {status:true, retorno: retorno};
         }
 
+    }
+
+    async validaSenhaUsuario_Services(email, senha){
+        const retorno = await amalfisCli.Usuario.findAll({
+            attributes:['id','nome','email'],
+            where: {email: email}
+        });
+
+        if(retorno === null){
+            console.log('E-mail não encontrado na base de dados');
+            return {status:false, retorno: retorno};
+        }
+
+        const pwd = await amalfisCli.Usuario.findAll({
+            attributes:['senha'],
+            where: {email: email}
+        });
+        const senhaDB = pwd[0].dataValues.senha;
+        const checkSenha = await bcrypt.compare(senha, senhaDB);
+        if(!checkSenha) return {status:false, message:"usuario ou senha incorreto!"};
+
+        try {
+            const secret = process.env.SECRET_LOGIN;
+            let token=''
+            const TokenExpirationTime = '1d'
+            if(checkSenha){
+            token = jwt.sign({
+                id: retorno[0].dataValues.id,
+                nome: retorno[0].dataValues.nome,
+                email: retorno[0].dataValues.email,
+            },secret,{ expiresIn: TokenExpirationTime }
+            )}
+
+            return {message:"Autentiação realizada com sucesso",token, status:true}
+        } catch (e) {
+            console.log(e);
+            return { status:false, error: e.message };
+        }
     }
 
     async cadastraUsuario_Services(bodyReq) {

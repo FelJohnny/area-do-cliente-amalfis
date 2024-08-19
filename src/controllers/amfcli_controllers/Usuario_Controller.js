@@ -18,7 +18,7 @@ class Usuario_Controller extends Controller{
             //valida campos obrigatorios
             if(isTrue.status){
                 //checar se o usuario existe
-                const userExist = await usuario_services.pegaUsuarioPorEmail(email)
+                const userExist = await usuario_services.pegaUsuarioPorEmail_Services(email)
                 if(userExist.status){
                     return res.status(422).json({
                         message:"O e-mail informado já está em uso!",
@@ -57,6 +57,24 @@ class Usuario_Controller extends Controller{
                 error:true 
             });
         }
+    }
+
+    async loginUsuario_Controller(req,res){
+        const {email, senha} = req.body;
+        let emailExist ='';
+
+        if(!email) return res.status(422).json({message:"Por favor, insira um email"});
+        if(!senha) return res.status(422).json({message:"Por favor, preencha uma senha"});
+        if(email) emailExist = await usuario_services.pegaUsuarioPorEmail_Services(email);
+
+        let checkSenha ='';
+        if(emailExist.status){
+            checkSenha = await usuario_services.validaSenhaUsuario_Services(email, senha);
+        }
+        if(!checkSenha.status){
+            return res.status(401).json({error:true, message:"E-mail ou Senha incorreta"});
+        }
+        return res.status(200).json({message:"Autentiação realizada com sucesso",token: checkSenha.token, error:false})
     }
 }
 

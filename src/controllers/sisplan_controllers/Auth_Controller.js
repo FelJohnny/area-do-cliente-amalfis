@@ -24,7 +24,7 @@ class Auth_Controller extends Controller{
         if(email){
             emailExist = await auth_services.pegaRegistroPorEmail_Services(email);
         }
-        
+
         let checkSenha ='';
         if(emailExist.status){
             checkSenha = await auth_services.validaSenhaUsuario_Services(email, senha);
