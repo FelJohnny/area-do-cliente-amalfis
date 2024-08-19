@@ -155,6 +155,10 @@ class Usuario_Services extends Services{
             if (!transaction.finished) await transaction.rollback(); // Assegura que a transação seja finalizada
         }
     }
+
+    async deletaUsuarioPorId_Services(id){
+        return amalfisCli.Usuario.destroy({ where: { id: id } });
+    }
 }
 
 module.exports = Usuario_Services
