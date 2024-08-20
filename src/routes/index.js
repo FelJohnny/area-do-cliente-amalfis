@@ -10,6 +10,7 @@ const role_Routes = require('./amfcli_routes/role_Routes.js')
 const permissao_Routes = require('./amfcli_routes/permissao_Routes.js')
 const seguranca_Routes = require('./amfcli_routes/seguranca_Routes.js')
 const usuario_Routes = require('./amfcli_routes/usuario_Routes.js')
+const clientes_usuarios_Routes = require('./amfcli_routes/clientes_usuarios_Routes.js')
 
 module.exports = (app)=>{
     app.use(cors());
@@ -26,4 +27,5 @@ module.exports = (app)=>{
     app.use(seguranca_Routes);
     app.use(grupo_cli_001_Routes);
     app.use(colecao_001_Routes);
+    app.use(clientes_usuarios_Routes);
 }

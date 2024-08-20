@@ -7,7 +7,7 @@ const pedido_001_controller = new Pedido_001_Controller()
 const route = Router();
 
 //pega pedidos, produtos do pedido e informacoes da entidade, Com lista em paginação
-route.get('/api/pedido/cliente/:codcli/',checkTokenLogin,(req, res)=>{pedido_001_controller.pegaPedidosPorCodCli_Controller(req,res)} )
+route.get('/api/pedido/cliente/:id/',checkTokenLogin,(req, res)=>{pedido_001_controller.pegaPedidosPorCodCliEColecao_Controller(req,res)} )
 //pega pedidos por data inicio e fim
 route.get('/api/pedido/cliente/:codcli/date/',checkTokenLogin,(req, res)=>{pedido_001_controller.pegaPedidosPorCodCliDatas_Controller(req,res)} )
 //pega um pedido, produtos do pedido e informacoes da entidade

@@ -8,6 +8,49 @@ const jwt = require('jsonwebtoken');
 
 
 class Usuario_Services extends Services{
+    
+    async pegaUsuarioPorId_Services(id){
+        const usuario = await amalfisCli.Usuario.findOne({
+            where: {id: id},
+            include:[
+                {
+                    model: amalfisCli.Role,
+                    as:'usuario_roles',
+                    attributes:['id','nome','descricao'],
+                    through: { attributes: [] } // Exclui os atributos da tabela de junção
+                },
+                {
+                    model: amalfisCli.Permissao,
+                    as:'usuario_permissoes',
+                    attributes:['id','nome','descricao'],
+                    through: { attributes: [] } // Exclui os atributos da tabela de junção
+                },
+                {
+                    model: amalfisCli.Clientes_usuarios,
+                    as:'usuario_clientes',
+                    attributes:['codcli','nome','cnpj'],
+                },
+                {
+                    model: amalfisCli.Clientes_usuarios,
+                    as:'usuario_clientes',
+                    attributes:['codcli','nome','cnpj'],
+                },
+                {
+                    model: amalfisCli.Colecao_usuarios,
+                    as:'usuario_colecoes',
+                    attributes:['codigo','descricao'],
+                },
+                
+            ]
+        });
+        if(usuario === null){
+            console.log('registro não encontrado na base de dados');
+            return {status:false, usuario: usuario};
+        }else{
+            console.log('registro foi encontrado na base de dados');
+            return {status:true, usuario: usuario};
+        }
+    }
 
     async pegaUsuarioPorEmail_Services(email){
         const retorno = await amalfisCli.Usuario.findOne({where: {email: email}})

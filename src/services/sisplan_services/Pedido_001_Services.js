@@ -8,7 +8,7 @@ class Pedido_001_Services extends Services {
         super('Pedido_001');
     }
 
-    async pegaPedidosPorCodCli_Service(codcli, infoLimit,limit) {
+    async pegaPedidosPorCodCliEColecao_Service(codcli,colecao,infoLimit,limit) {
         const pedidos = await db.sisplan.Pedido_001.findAll({
             attributes:['codcli', 'numero','ped_cli', 'codrep', 'dt_emissao', 'dt_fatura', 'dt_saida', 'entrega', 'nota', 'deposito'],
             include:[
@@ -23,7 +23,7 @@ class Pedido_001_Services extends Services {
                     attributes:['codigo','descricao'],
                 }
             ],
-            where: { codcli: codcli },
+            where: { codcli: codcli, colecao:colecao },
             offset: Number(infoLimit),
             limit:Number(limit),
             order:[['numero','DESC']],
