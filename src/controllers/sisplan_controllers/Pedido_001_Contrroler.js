@@ -160,11 +160,32 @@ class Pedido_001_Controller extends Controller{
       }
     }
 
-    async pegaPedidosPorCodCliDatas_Controller(req,res){
+    async pegaPedidosPorCodCliColecaoEDatas_Controller(req,res){
       try {
-        const { codcli } = req.params;
+        const { id } = req.params;
         const { dataInicio, dataFim } = req.query;
-        const pedidos = await pedido_001_services.pegaPedidosPorCodCliDatas_Service(codcli,dataInicio, dataFim)
+
+        //consultando os clientes que estão vinculados no usuario
+        const ClientesPusuario = await clientes_usuario_services.pegaCodcliPorId_Services(id);
+        const codcliArray = [];
+        ClientesPusuario.forEach(cliente => {
+          codcliArray.push(cliente.dataValues.codcli);
+        });
+        
+        //consultando os coleções que estão vinculados no usuario
+        console.log(id);
+        
+        const ColecoesPusuario = await amalfisCli.Colecao_usuarios.findAll({
+          where:{usuario_id:id},
+          attributes:['codigo']
+        });
+
+        const colecaoArray = []
+        ColecoesPusuario.forEach(colecao => {
+          colecaoArray.push(colecao.dataValues.codigo);
+        });
+
+        const pedidos = await pedido_001_services.pegaPedidosPorCodCliColecaoEDatas_Services(codcliArray,colecaoArray, dataInicio, dataFim)
         if(pedidos.length === 0){
           return res.status(400).json({message:`não foi possivel encontrar o registro: ${codcli}`});
         }else{
