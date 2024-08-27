@@ -1,5 +1,6 @@
-const Services = require('./Services.js');
-const model = require('../models/index.js');
+const Services = require('../Services.js');
+const db = require('../../models/index.js')
+
 const bcrypt = require('bcrypt');
 
 class Auth_Services extends Services{
@@ -9,7 +10,7 @@ class Auth_Services extends Services{
 
     async pegaRegistroPorEmail_Services(email){
 
-        const retorno = await model.Entidade_001.findOne({
+        const retorno = await db.sisplan.Entidade_001.findOne({
             where: {email: email},
             attributes:['codcli','nome','email','telefone','cnpj','num_rg']
         })
@@ -23,7 +24,7 @@ class Auth_Services extends Services{
     }
 
     async validaSenhaUsuario_Services(email, cnpj){
-        const retorno = await model.Entidade_001.findAll({
+        const retorno = await db.sisplan.Entidade_001.findAll({
             attributes:['codcli','nome','email','telefone','cnpj','num_rg'],
             where: {email: email}
         });

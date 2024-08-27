@@ -10,7 +10,19 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey:'codcli',
         as:'pedidos_cli',
       })
+
+      Entidade_001.hasMany(models.Grupo_cli_001,{
+        foreignKey:'grupo',
+        as:'cli_grupo',
+      })
+
+      Entidade_001.hasMany(models.Contato_001,{
+        foreignKey:'codcli',
+        as:'cli_contatos'
+      })
     }
+
+    
   }
   Entidade_001.init({
     codcli: {
@@ -21,7 +33,8 @@ module.exports = (sequelize, DataTypes) => {
     email: DataTypes.STRING,
     telefone: DataTypes.STRING,
     cnpj: DataTypes.STRING,
-    num_rg: DataTypes.STRING
+    num_rg: DataTypes.STRING,
+    grupo: DataTypes.STRING,
   }, {
     sequelize,
     modelName: 'Entidade_001',

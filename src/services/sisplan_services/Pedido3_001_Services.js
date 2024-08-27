@@ -1,12 +1,12 @@
-const Services = require('./Services.js')
-const model = require('../models/index.js')
+const Services = require('../Services.js')
+const db = require('../../models/index.js')
 class Pedido3_001_Services extends Services{
     constructor(){
         super('Pedido3_001')
     }
 
     async pegaItensExpedidosPorPedido_Service(numero){
-        const retorno = await model.Pedido3_001.findAll({
+        const retorno = await db.sisplan.Pedido3_001.findAll({
             attributes:['numero', 'codigo', 'tam', 'cor','caixa', 'qtde', 'qtde_f', 'deposito'],
             where: {numero: numero},
         })
