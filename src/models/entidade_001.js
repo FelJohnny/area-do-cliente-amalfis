@@ -15,6 +15,11 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey:'grupo',
         as:'cli_grupo',
       })
+
+      Entidade_001.hasMany(models.Contato_001,{
+        foreignKey:'codcli',
+        as:'cli_contatos'
+      })
     }
 
     
@@ -28,7 +33,8 @@ module.exports = (sequelize, DataTypes) => {
     email: DataTypes.STRING,
     telefone: DataTypes.STRING,
     cnpj: DataTypes.STRING,
-    num_rg: DataTypes.STRING
+    num_rg: DataTypes.STRING,
+    grupo: DataTypes.STRING,
   }, {
     sequelize,
     modelName: 'Entidade_001',

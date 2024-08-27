@@ -6,6 +6,7 @@ const auth_Routes = require('./sisplan_routes/auth_Routes.js')
 const contato_001_Routes = require('./sisplan_routes/contato_001_Routes.js')
 const grupo_cli_001_Routes = require('./sisplan_routes/grupo_cli_001_Routes.js')
 const colecao_001_Routes = require('./sisplan_routes/colecao_001_Routes.js')
+const entidade_001_Routes = require('./sisplan_routes/entidade_001_Routes.js')
 const role_Routes = require('./amfcli_routes/role_Routes.js')
 const permissao_Routes = require('./amfcli_routes/permissao_Routes.js')
 const seguranca_Routes = require('./amfcli_routes/seguranca_Routes.js')
@@ -21,6 +22,7 @@ module.exports = (app)=>{
     app.use(auth_Routes);
     app.use(contato_001_Routes);
     app.use(usuario_Routes);
+    app.use(entidade_001_Routes);
     //amalfis-cli
     app.use(role_Routes);
     app.use(permissao_Routes);

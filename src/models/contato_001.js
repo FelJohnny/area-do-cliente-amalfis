@@ -6,7 +6,10 @@ module.exports = (sequelize, DataTypes) => {
   class contato_001 extends Model {
 
     static associate(models) {
-
+      contato_001.belongsTo(models.Entidade_001,{
+        foreignKey:'codcli',
+        as:'entidade_contato',
+      })
     }
   }
   contato_001.init({
