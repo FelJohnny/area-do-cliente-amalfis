@@ -1,5 +1,5 @@
-const Grupo_Cli_001_Controller = require('../../controllers/sisplan_controllers/Grupo_cli_001_Controller.js');
 const {Router} = require('express')
+const Grupo_Cli_001_Controller = require('../../controllers/sisplan_controllers/Grupo_cli_001_Controller.js');
 const checkTokenLogin = require('../../../middlewares/checkTokenLogin.js')
 
 const grupo_cli_001_controller = new Grupo_Cli_001_Controller();
