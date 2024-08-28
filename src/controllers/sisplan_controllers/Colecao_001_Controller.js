@@ -3,7 +3,7 @@ const Colecao_001_Services = require('../../services/sisplan_services/Colecao_00
 
 const colecao_001_services = new Colecao_001_Services()
 
-class Grupo_cli_001_Controller extends Controller{
+class Colecao_001_Controller extends Controller{
     constructor(){
         super(colecao_001_services)
     }
@@ -54,5 +54,5 @@ class Grupo_cli_001_Controller extends Controller{
 }
 
 
-module.exports = Grupo_cli_001_Controller;
+module.exports = Colecao_001_Controller;
 
