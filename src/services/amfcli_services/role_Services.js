@@ -39,6 +39,22 @@ class Role_Services extends Services{
     async deletaRolePorId_Services(id){
         return amalfisCli[this.nomeModel].destroy({ where: { id: id } });
     }
+
+    //serviço para pegar permissões associadas a uma role
+    async pegaPermissoesPorRole_Services(roleId) {
+        const role = await amalfisCli.Role.findByPk(roleId, {
+            include: [{
+                model: amalfisCli.Permissao, // Modelo de permissões
+                as: 'permissoes', // Alias definido na associação
+            }]
+        });
+
+        if (!role) {
+            return null;
+        }
+
+        return role.permissoes; // Retorna as permissões associadas à role
+    }
 }
 
 module.exports = Role_Services

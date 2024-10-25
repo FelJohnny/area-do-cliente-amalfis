@@ -78,6 +78,21 @@ class Role_Controller extends Controller{
             return res.status(500).json({message: `erro ao buscar registro, contate o administrador do sistema`});
         }
     }
+
+    //método para pegar permissões associadas a uma role
+    async pegaPermissoesPorRole_Controller(req, res) {
+        const { id } = req.params;
+        try {
+            const permissoes = await role_services.pegaPermissoesPorRole_Services(id);
+            if (!permissoes) {
+                return res.status(404).json({ message: 'Cargo não encontrado ou sem permissões associadas' });
+            }
+            return res.status(200).json(permissoes);
+        } catch (e) {
+            console.log(e);
+            return res.status(500).json({ message: 'Erro ao buscar permissões', error: e.message });
+        }
+    }
 }
 
 module.exports = Role_Controller;

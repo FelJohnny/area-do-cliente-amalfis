@@ -102,18 +102,18 @@ class Usuario_Services extends Services{
         }
     }
 
-    async cadastraUsuario_Services(bodyReq) {
+    async cadastraUsuario_Services(bodyReq, permissoesCRUD) {
         const transaction = await sequelizeAmalfisCli.transaction(); // Inicia a transação
     
         try {
             // Valida se os role_id são UUIDs válidos
             if (!bodyReq.roles_id.every(id => isUuid(id))) {
-                return { status: false, message: 'Um ou mais roles_id são inválidos.' };
+                return { status: false, message: 'Informe um cargo válido.' };
             }
     
             // Valida se os permissao_id são UUIDs válidos
             if (!bodyReq.permissoes_id.every(id => isUuid(id))) {
-                return { status: false, message: 'Um ou mais permissoes_id são inválidos.' };
+                return { status: false, message: 'Informe uma permissão válida.' };
             }
     
             // Verifica se role_id existe no banco de dados
@@ -147,23 +147,39 @@ class Usuario_Services extends Services{
             // Cria o usuário dentro da transação
             const usuario = await amalfisCli.Usuario.create({ id: uuid.v4(), ...bodyReq }, { transaction });
     
-            if(usuario === null){
-                console.log('usuario nao cadastrado');
+            if (usuario === null) {
+                console.log('usuário não cadastrado');
                 await transaction.rollback(); // Faz o rollback caso o usuário não seja criado
-                return {status:false};
+                return { status: false };
             }
     
             // Adiciona roles ao usuário
             await usuario.addUsuario_roles(bodyReq.roles_id, { transaction });
     
-            // Adiciona permissoes ao usuário
+            // Adiciona permissões ao usuário
             await usuario.addUsuario_permissoes(bodyReq.permissoes_id, { transaction });
+    
+            // Adiciona as permissões CRUD ao usuário
+            if (permissoesCRUD && permissoesCRUD.length) {
+                for (const permissao of permissoesCRUD) {
+                    const { permissao_id, can_create, can_read, can_update, can_delete } = permissao;
+    
+                    await amalfisCli.UserPermissionAccess.create({
+                        usuario_id: usuario.id,
+                        permissao_id,
+                        can_create,
+                        can_read,
+                        can_update,
+                        can_delete
+                    }, { transaction });
+                }
+            }
     
             // Cria coleções e as associa ao usuário
             if (bodyReq.colecao && Array.isArray(bodyReq.colecao)) {
                 for (const colecao of bodyReq.colecao) {
                     const novaColecao = await amalfisCli.Colecao_usuarios.create({
-                        usuario_id: usuario.id,  // Adicionando a referência do usuário criado
+                        usuario_id: usuario.id, // Adicionando a referência do usuário criado
                         codigo: colecao.codigo,
                         descricao: colecao.descricao
                     }, { transaction });
@@ -175,7 +191,7 @@ class Usuario_Services extends Services{
             if (bodyReq.clientes && Array.isArray(bodyReq.clientes)) {
                 for (const cliente of bodyReq.clientes) {
                     const novoCliente = await amalfisCli.Clientes_usuarios.create({
-                        usuario_id: usuario.id,  // Adicionando a referência do usuário criado
+                        usuario_id: usuario.id, // Adicionando a referência do usuário criado
                         codcli: cliente.codcli,
                         nome: cliente.nome,
                         cnpj: cliente.cnpj,
@@ -185,19 +201,21 @@ class Usuario_Services extends Services{
                 }
             }
     
-            // Se tudo deu certo, commit na transação
+            // Commit na transação se tudo deu certo
             await transaction.commit();
-            console.log('usuario cadastrado com sucesso');
+            console.log('usuário cadastrado com sucesso');
             return { status: true };
     
         } catch (e) {
             await transaction.rollback(); // Faz o rollback caso ocorra qualquer erro
             console.error('Erro na associação', e);
             return { status: false, message: 'Erro na associação', error: e.message };
-        }finally {
+        } finally {
             if (!transaction.finished) await transaction.rollback(); // Assegura que a transação seja finalizada
         }
     }
+    
+    
 
     async deletaUsuarioPorId_Services(id){
         return amalfisCli.Usuario.destroy({ where: { id: id } });

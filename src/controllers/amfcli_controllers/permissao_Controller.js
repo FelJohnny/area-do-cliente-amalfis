@@ -1,5 +1,6 @@
 const Controller = require('../Controller.js')
 const Permissao_Services =  require('../../services/amfcli_services/permissao_Services.js')
+const {amalfisCli} = require('../../models/index.js')
 
 const permissao_services = new Permissao_Services();
 const camposObrigatorios = ['nome','descricao'];
@@ -21,36 +22,72 @@ class Permissao_Controller extends Controller{
         }
     }
 
-    async criaPermissao_Controller(req,res){
-        const isTrue = await this.allowNull(req,res);
-        try{
-            if(isTrue.status){
-                const {nome, descricao} = req.body;
-                const permissao = await permissao_services.criaPermissao_Services({nome, descricao});
-                if(permissao.error){
+    async criaPermissao_Controller(req, res) {
+        const isTrue = await this.allowNull(req, res);
+        try {
+            // Verifique se o roleId foi fornecido e se é um array
+            const { nome, descricao, roleIds } = req.body;
+    
+            if (!roleIds || !Array.isArray(roleIds) || roleIds.length === 0) {
+                return res.status(400).json({
+                    message: 'O campo roleIds é obrigatório e deve ser um array de IDs de roles.',
+                });
+            }
+    
+            // Busca todas as roles baseadas no array de roleIds
+            const roles = await amalfisCli.Role.findAll({
+                where: {
+                    id: roleIds
+                }
+            });
+    
+            if (roles.length === 0) {
+                return res.status(404).json({ message: 'Nenhuma Role encontrada com os IDs fornecidos' });
+            }
+    
+            if (isTrue.status) {
+                const permissaoResult = await permissao_services.criaPermissao_Services({ nome, descricao });
+                if (permissaoResult.error) {
                     return res.status(500).json({
-                        message:'já existe uma permissao com o nome informado',
-                        error:permissao.error,
-                    })
-                }else{
+                        message: 'Já existe uma permissão com o nome informado',
+                        error: permissaoResult.error,
+                    });
+                } else {
+                    const permissao = permissaoResult.permissao;
+    
+                    // Associa a permissão a todas as roles fornecidas
+                    await permissao.addRoles(roles);  // Adiciona as roles à permissão
+    
+                    // Busca novamente a permissão com as roles associadas
+                    const permissaoComRoles = await amalfisCli.Permissao.findByPk(permissao.id, {
+                        include: [
+                            {
+                                model: amalfisCli.Role,
+                                as: 'roles',  // Inclui as roles associadas
+                                through: { attributes: [] },  // Oculta atributos da tabela intermediária
+                            }
+                        ]
+                    });
+    
                     return res.status(200).json({
-                        message:'Permissao criada',
-                        error: permissao.error,
-                        permissao:permissao,
+                        message: 'Permissão criada e vinculada às roles com sucesso',
+                        permissao: permissaoComRoles,
                     });
                 }
-            }else{
+            } else {
                 return res.status(500).json({
-                    message: 'Preencha todos os campos necessarios',
+                    message: 'Preencha todos os campos necessários',
                     campos: isTrue.campos,
                     error: true,
                 });
             }
-        }catch (e) {
+        } catch (e) {
             console.log(e);
-            return res.status(400).json({ message: `erro ao criar, contate o administrador do sistema` });
-          }
+            return res.status(400).json({ message: `Erro ao criar, contate o administrador do sistema` });
+        }
     }
+    
+    
 
     async pegaPermissaoPorId_Controller(req,res){
         const { id } = req.params;        

@@ -22,55 +22,82 @@ class Usuario_Controller extends Controller{
 
     }
 
-    async registerUsuario_Controller(req,res){
-        const {email} = req.body;
+    async registerUsuario_Controller(req, res) {
+        const { email, permissoesCRUD } = req.body;  // permissoesCRUD é um array com permissões CRUD
         const bodyReq = req.body;
-        
-        try{
+    
+        try {
             const isTrue = await this.allowNull(req, res);
-            //valida campos obrigatorios
-            if(isTrue.status){
-                //checar se o usuario existe
-                const userExist = await usuario_services.pegaUsuarioPorEmail_Services(email)
-                if(userExist.status){
-                    return res.status(422).json({
-                        message:"O e-mail informado já está em uso!",
-                        error:true
-                    });
-                }
-                //gerando senha cripto
-                const salt = await bcrypt.genSalt(12);
-                const senhaHash = await bcrypt.hash(bodyReq.senha, salt);
-                bodyReq.senha = senhaHash;
-                //criando usuario
-                const createUser = await usuario_services.cadastraUsuario_Services(bodyReq);
-
-                if(createUser.status){
-                    return res.status(200).json({ 
-                        message: `usuario cadastrado com sucesso`,
-                        error:false
-                    });
-                }else{
-                    return res.status(500).json({ 
-                        message: createUser.message || `erro ao cadastrar o usuario`,
-                        error:true
-                    });
-                }
-            }else{
+            if (!isTrue.status) {
                 return res.status(500).json({
-                    message: 'Preencha todos os campos necessarios',
+                    message: 'Preencha todos os campos necessários',
                     campos: isTrue.campos,
                     error: true,
                 });
             }
-        }catch(e){
+    
+            // Verifica se o usuário já existe
+            const userExist = await usuario_services.pegaUsuarioPorEmail_Services(email);
+            if (userExist.status) {
+                return res.status(422).json({
+                    message: "O e-mail informado já está em uso!",
+                    error: true
+                });
+            }
+    
+            // Verifica se permissoesCRUD foi passado e se é um array
+            if (!permissoesCRUD || !Array.isArray(permissoesCRUD)) {
+                return res.status(400).json({
+                    message: "Permissões CRUD não fornecidas ou inválidas",
+                    error: true
+                });
+            }
+    
+            // Verifica se todos os campos necessários para permissoesCRUD estão corretos
+            const invalidPermissoes = permissoesCRUD.some(permissao => 
+                !permissao.permissao_id || 
+                typeof permissao.can_create === 'undefined' || 
+                typeof permissao.can_read === 'undefined' || 
+                typeof permissao.can_update === 'undefined' || 
+                typeof permissao.can_delete === 'undefined'
+            );
+    
+            if (invalidPermissoes) {
+                return res.status(400).json({
+                    message: "As permissões CRUD fornecidas estão incompletas ou inválidas",
+                    error: true
+                });
+            }
+    
+            // Gerando senha cripto
+            const salt = await bcrypt.genSalt(12);
+            const senhaHash = await bcrypt.hash(bodyReq.senha, salt);
+            bodyReq.senha = senhaHash;
+    
+            // Chama o serviço para registrar o usuário
+            const createUser = await usuario_services.cadastraUsuario_Services(bodyReq, permissoesCRUD);
+    
+            if (createUser.status) {
+                return res.status(200).json({
+                    message: `Usuário cadastrado com sucesso`,
+                    error: false
+                });
+            } else {
+                return res.status(500).json({
+                    message: createUser.message || `Erro ao cadastrar o usuário`,
+                    error: true
+                });
+            }
+    
+        } catch (e) {
             console.log(e);
             return res.status(500).json({
-                message: `erro ao buscar registro, contate o administrador do sistema`,
-                error:true 
+                message: `Erro ao buscar registro, contate o administrador do sistema`,
+                error: true
             });
         }
-    }
+    }    
+    
 
     async loginUsuario_Controller(req,res){
         const {email, senha} = req.body;
