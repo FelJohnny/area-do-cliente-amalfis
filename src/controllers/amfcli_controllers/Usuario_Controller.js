@@ -2,7 +2,7 @@ const Controller = require('../Controller.js')
 const Usuario_services = require('../../services/amfcli_services/Usuario_Services.js')
 const usuario_services = new Usuario_services();
 const bcrypt = require('bcrypt');
-const camposObrigatorios = ['nome','colecao','email','senha','contato','roles_id','permissoes_id',]
+const camposObrigatorios = ['nome','colecao','email','senha','contato','roles_id','permissoes_id','empresa_id']
 
 class Usuario_Controller extends Controller{
     constructor(){
@@ -23,7 +23,7 @@ class Usuario_Controller extends Controller{
     }
 
     async registerUsuario_Controller(req, res) {
-        const { email, permissoesCRUD } = req.body;  // permissoesCRUD é um array com permissões CRUD
+        const { email, permissoesCRUD, empresa_id } = req.body; // Adiciona empresa_id no corpo da requisição
         const bodyReq = req.body;
     
         try {
@@ -69,6 +69,23 @@ class Usuario_Controller extends Controller{
                 });
             }
     
+            // Verifica se o empresa_id foi passado
+            if (!empresa_id) {
+                return res.status(400).json({
+                    message: "ID da empresa não fornecido",
+                    error: true
+                });
+            }
+    
+            // Verifica se a empresa existe
+            const empresa = await usuario_services.pegaUsuarioPorId_Services(empresa_id);
+            if (!empresa) {
+                return res.status(404).json({
+                    message: "Empresa não encontrada",
+                    error: true
+                });
+            }
+    
             // Gerando senha cripto
             const salt = await bcrypt.genSalt(12);
             const senhaHash = await bcrypt.hash(bodyReq.senha, salt);
@@ -77,9 +94,9 @@ class Usuario_Controller extends Controller{
             // Chama o serviço para registrar o usuário
             const createUser = await usuario_services.cadastraUsuario_Services(bodyReq, permissoesCRUD);
     
-            if (createUser.status) {
+            if (createUser.status) {    
                 return res.status(200).json({
-                    message: `Usuário cadastrado com sucesso`,
+                    message: `Usuário cadastrado e vinculado à empresa com sucesso`,
                     error: false
                 });
             } else {
@@ -96,7 +113,8 @@ class Usuario_Controller extends Controller{
                 error: true
             });
         }
-    }    
+    }
+    
     
 
     async loginUsuario_Controller(req,res){

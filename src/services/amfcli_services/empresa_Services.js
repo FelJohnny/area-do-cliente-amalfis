@@ -23,7 +23,8 @@ class Empresa_Services extends Services {
                 id: uuid.v4(),
                 nome: dados.nome,
                 descricao: dados.descricao,
-                endereco: dados.endereco
+                endereco: dados.endereco,
+                cnpj: dados.cnpj
             });
             return { error: false, empresa: novaEmpresa };
         }

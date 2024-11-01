@@ -1,6 +1,6 @@
 const { Router } = require('express');
 const checkTokenLogin = require('../../../middlewares/checkTokenLogin.js');
-const UsuarioEmpresa_Controller = require('../../controllers/amfcli_controllers/usuario_empresa_Controller.js');
+const UsuarioEmpresa_Controller = require('../../controllers/amfcli_controllers/UsuarioEmpresa_Controller.js')
 
 const usuario_empresa_controller = new UsuarioEmpresa_Controller();
 const route = Router();

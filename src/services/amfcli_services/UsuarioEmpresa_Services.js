@@ -7,7 +7,7 @@ class UsuarioEmpresa_Services {
         const usuarios = await amalfisCli.Usuario.findAll({
             include: [{
                 model: amalfisCli.Empresa,
-                as: 'usuario_empresas',
+                as: 'empresas',
                 where: { id: empresaId }
             }]
         });

@@ -2,7 +2,7 @@ const Controller = require('../Controller.js');
 const Empresa_Services = require('../../services/amfcli_services/empresa_Services.js');
 
 const empresa_services = new Empresa_Services();
-const camposObrigatorios = ['nome', 'descricao', 'endereco'];
+const camposObrigatorios = ['nome', 'descricao', 'endereco','cnpj'];
 
 class Empresa_Controller extends Controller {
     constructor() {
@@ -25,8 +25,8 @@ class Empresa_Controller extends Controller {
         const isTrue = await this.allowNull(req, res);
         try {
             if (isTrue.status) {
-                const { nome, descricao, endereco } = req.body;
-                const empresa = await empresa_services.criaEmpresa_Services({ nome, descricao, endereco });
+                const { nome, descricao, endereco, cnpj } = req.body;
+                const empresa = await empresa_services.criaEmpresa_Services({ nome, descricao, endereco, cnpj });
                 if (empresa.error) {
                     return res.status(500).json({
                         message: 'Já existe uma empresa com o nome informado',

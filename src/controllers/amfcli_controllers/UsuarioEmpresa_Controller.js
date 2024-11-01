@@ -1,4 +1,4 @@
-const UsuarioEmpresa_Services = require('../../services/amfcli_services/usuario_empresa_Services.js');
+const UsuarioEmpresa_Services = require('../../services/amfcli_services/UsuarioEmpresa_Services')
 
 const usuario_empresa_services = new UsuarioEmpresa_Services();
 

@@ -9,48 +9,91 @@ const jwt = require('jsonwebtoken');
 
 class Usuario_Services extends Services{
     
-    async pegaUsuarioPorId_Services(id){
+    async pegaUsuarioPorId_Services(id) {
         const usuario = await amalfisCli.Usuario.findOne({
-            where: {id: id},
-            include:[
+            where: { id: id },
+            include: [
                 {
                     model: amalfisCli.Role,
-                    as:'usuario_roles',
-                    attributes:['id','nome','descricao'],
+                    as: 'usuario_roles',
+                    attributes: ['id', 'nome', 'descricao'],
                     through: { attributes: [] } // Exclui os atributos da tabela de junção
                 },
                 {
                     model: amalfisCli.Permissao,
-                    as:'usuario_permissoes',
-                    attributes:['id','nome','descricao'],
-                    through: { attributes: [] } // Exclui os atributos da tabela de junção
+                    as: 'usuario_permissoes',
+                    attributes: ['id', 'nome', 'descricao'],
+                    through: { attributes: [] },
+                    include: [
+                        {
+                            model: amalfisCli.UserPermissionAccess,
+                            as: 'user_permissions_access',
+                            attributes: ['can_create', 'can_read', 'can_update', 'can_delete'],
+                            where: { usuario_id: id } // Filtra para o usuário específico
+                        }
+                    ]
                 },
                 {
                     model: amalfisCli.Clientes_usuarios,
-                    as:'usuario_clientes',
-                    attributes:['codcli','nome','cnpj'],
-                },
-                {
-                    model: amalfisCli.Clientes_usuarios,
-                    as:'usuario_clientes',
-                    attributes:['codcli','nome','cnpj'],
+                    as: 'usuario_clientes',
+                    attributes: ['codcli', 'nome', 'cnpj'],
                 },
                 {
                     model: amalfisCli.Colecao_usuarios,
-                    as:'usuario_colecoes',
-                    attributes:['codigo','descricao'],
-                },
-                
+                    as: 'usuario_colecoes',
+                    attributes: ['codigo', 'descricao'],
+                }
             ]
         });
-        if(usuario === null){
-            console.log('registro não encontrado na base de dados');
-            return {status:false, usuario: usuario};
-        }else{
-            console.log('registro foi encontrado na base de dados');
-            return {status:true, usuario: usuario};
+    
+        if (usuario === null) {
+            console.log('Registro não encontrado na base de dados');
+            return { status: false, usuario: null };
         }
+    
+        // Agrupa as permissões por tela usando UserPermissionAccess
+        const permissoesPorTela = usuario.usuario_permissoes.reduce((acc, permissao) => {
+            const telaNome = permissao.nome; // Usando o nome da permissão como representação da tela
+    
+            if (!acc[telaNome]) {
+                acc[telaNome] = {
+                    tela: telaNome,
+                    permissoes: []
+                };
+            }
+    
+            // Extraindo permissões CRUD de `user_permissions_access`
+            const crudPermissions = permissao.user_permissions_access[0]; // Obtém a entrada CRUD específica
+            acc[telaNome].permissoes.push({
+                permissao_id: permissao.id,
+                can_create: crudPermissions?.can_create || false,
+                can_read: crudPermissions?.can_read || false,
+                can_update: crudPermissions?.can_update || false,
+                can_delete: crudPermissions?.can_delete || false
+            });
+    
+            return acc;
+        }, {});
+    
+        // Organiza a resposta final com o usuário e permissões agrupadas por tela
+        return {
+            status: true,
+            usuario: {
+                id: usuario.id,
+                nome: usuario.nome,
+                email: usuario.email,
+                contato: usuario.contato,
+                createdAt: usuario.createdAt,
+                updatedAt: usuario.updatedAt,
+                usuario_roles: usuario.usuario_roles,
+                usuario_clientes: usuario.usuario_clientes,
+                usuario_colecoes: usuario.usuario_colecoes,
+                usuario_permissoes_por_tela: Object.values(permissoesPorTela)
+            }
+        };
     }
+    
+    
 
     async pegaUsuarioPorEmail_Services(email){
         const retorno = await amalfisCli.Usuario.findOne({where: {email: email}})
@@ -144,6 +187,17 @@ class Usuario_Services extends Services{
                 return { status: false, message: 'Uma ou mais permissões não foram encontradas.' };
             }
     
+            // Verifica se o empresa_id é válido e se existe no banco de dados
+            if (!isUuid(bodyReq.empresa_id)) {
+                return { status: false, message: 'Informe uma empresa válida.' };
+            }
+    
+            const empresa = await amalfisCli.Empresa.findByPk(bodyReq.empresa_id, { transaction });
+    
+            if (!empresa) {
+                return { status: false, message: 'Empresa não encontrada.' };
+            }
+    
             // Cria o usuário dentro da transação
             const usuario = await amalfisCli.Usuario.create({ id: uuid.v4(), ...bodyReq }, { transaction });
     
@@ -201,6 +255,12 @@ class Usuario_Services extends Services{
                 }
             }
     
+            // Vincula o usuário à empresa
+            await amalfisCli.Usuario_Empresa.create({
+                usuario_id: usuario.id,
+                empresa_id: bodyReq.empresa_id
+            }, { transaction });
+    
             // Commit na transação se tudo deu certo
             await transaction.commit();
             console.log('usuário cadastrado com sucesso');
@@ -214,8 +274,6 @@ class Usuario_Services extends Services{
             if (!transaction.finished) await transaction.rollback(); // Assegura que a transação seja finalizada
         }
     }
-    
-    
 
     async deletaUsuarioPorId_Services(id){
         return amalfisCli.Usuario.destroy({ where: { id: id } });
