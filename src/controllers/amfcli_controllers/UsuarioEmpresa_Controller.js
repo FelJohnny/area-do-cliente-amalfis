@@ -49,6 +49,34 @@ class UsuarioEmpresa_Controller {
             return res.status(500).json({ message: 'Erro ao excluir o usuário da empresa, contate o administrador do sistema.' });
         }
     }
+
+    // Adiciona um usuário a uma empresa
+    async adicionaUsuarioEmpresa_Controller(req, res) {
+        const { empresaId, usuarioId } = req.params;
+        try {
+        const usuarioEmpresa = await usuario_empresa_services.adicionaUsuarioEmpresa_Services(empresaId, usuarioId);
+        if (usuarioEmpresa.error) {
+            return res.status(400).json({ message: usuarioEmpresa.message });
+        }
+        return res.status(200).json(usuarioEmpresa);
+        } catch (e) {
+        console.log(e);
+        return res.status(500).json({ message: 'Erro ao adicionar usuário à empresa' });
+        }
+    }
+
+    async pegaUsuariosDisponiveis_Controller(req, res) {
+        try {
+            const usuarios = await usuario_empresa_services.pegaUsuariosDisponiveis_Services();
+            return res.status(200).json(usuarios);
+        } catch (e) {
+            console.log(e);
+            return res.status(500).json({ message: 'Erro ao buscar usuários disponíveis, contate o administrador do sistema.' });
+        }
+    }
+  
 }
+
+
 
 module.exports = UsuarioEmpresa_Controller;

@@ -22,11 +22,11 @@ module.exports = (app) => {
     app.use(express.json());
 
     // sisplan
+    app.use(usuario_Routes);
     app.use(pedido3_001_Routes);
     app.use(pedido_001_Routes);
     app.use(auth_Routes);
     app.use(contato_001_Routes);
-    app.use(usuario_Routes);
     app.use(entidade_001_Routes);
     
     // amalfis-cli

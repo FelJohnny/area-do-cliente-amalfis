@@ -9,6 +9,94 @@ const jwt = require('jsonwebtoken');
 
 class Usuario_Services extends Services{
     
+    // Serviço para buscar todos os usuários
+    async pegaTodosUsuarios_Services() {
+        try {
+            const usuarios = await amalfisCli.Usuario.findAll({
+                attributes: ['id', 'nome', 'email', 'contato', 'createdAt', 'updatedAt'],
+                include: [
+                    {
+                        model: amalfisCli.Role,
+                        as: 'usuario_roles',
+                        attributes: ['id', 'nome', 'descricao'],
+                        through: { attributes: [] }
+                    },
+                    {
+                        model: amalfisCli.Permissao,
+                        as: 'usuario_permissoes',
+                        attributes: ['id', 'nome', 'descricao'],
+                        through: { attributes: [] },
+                        include: [
+                            {
+                                model: amalfisCli.UserPermissionAccess,
+                                as: 'user_permissions_access',
+                                attributes: ['can_create', 'can_read', 'can_update', 'can_delete']
+                            }
+                        ]
+                    },
+                    {
+                        model: amalfisCli.Clientes_usuarios,
+                        as: 'usuario_clientes',
+                        attributes: ['codcli', 'nome', 'cnpj']
+                    },
+                    {
+                        model: amalfisCli.Colecao_usuarios,
+                        as: 'usuario_colecoes',
+                        attributes: ['codigo', 'descricao']
+                    }
+                ]
+            });
+
+            if (!usuarios.length) {
+                return { status: false, usuarios: [] };
+            }
+
+            // Formata cada usuário com as permissões agrupadas por tela
+            const formattedUsuarios = usuarios.map(usuario => {
+                const permissoesPorTela = usuario.usuario_permissoes.reduce((acc, permissao) => {
+                    const telaNome = permissao.nome;
+
+                    if (!acc[telaNome]) {
+                        acc[telaNome] = {
+                            tela: telaNome,
+                            permissoes: []
+                        };
+                    }
+
+                    const crudPermissions = permissao.user_permissions_access[0];
+                    acc[telaNome].permissoes.push({
+                        permissao_id: permissao.id,
+                        can_create: crudPermissions?.can_create || false,
+                        can_read: crudPermissions?.can_read || false,
+                        can_update: crudPermissions?.can_update || false,
+                        can_delete: crudPermissions?.can_delete || false
+                    });
+
+                    return acc;
+                }, {});
+
+                return {
+                    id: usuario.id,
+                    nome: usuario.nome,
+                    email: usuario.email,
+                    contato: usuario.contato,
+                    createdAt: usuario.createdAt,
+                    updatedAt: usuario.updatedAt,
+                    usuario_roles: usuario.usuario_roles,
+                    usuario_clientes: usuario.usuario_clientes,
+                    usuario_colecoes: usuario.usuario_colecoes,
+                    usuario_permissoes_por_tela: Object.values(permissoesPorTela)
+                };
+            });
+
+            return { status: true, usuarios: formattedUsuarios };
+        } catch (error) {
+            console.log(error);
+            throw new Error("Erro ao buscar usuários");
+        }
+    }
+
+
     async pegaUsuarioPorId_Services(id) {
         const usuario = await amalfisCli.Usuario.findOne({
             where: { id: id },
@@ -144,6 +232,76 @@ class Usuario_Services extends Services{
             return { status:false, error: e.message };
         }
     }
+
+    async atualizaUsuario_Services(userId, data) {
+        const transaction = await sequelizeAmalfisCli.transaction();
+        try {
+            // 1. Atualizar dados básicos do usuário
+            await amalfisCli.Usuario.update(
+                {
+                    nome: data.nome,
+                    email: data.email,
+                    cargo: data.cargo,
+                    empresa_id: data.empresa_id,
+                },
+                { where: { id: userId }, transaction }
+            );
+    
+            // 2. Atualizar permissões CRUD
+            if (data.permissoesCRUD) {
+                // Verifique se `usuarios_permissoes` está importado diretamente do `models/index.js`
+                await amalfisCli.usuarios_permissoes.destroy({ where: { usuario_id: userId }, transaction });
+    
+                await amalfisCli.usuarios_permissoes.bulkCreate(
+                    data.permissoesCRUD.map((perm) => ({
+                        usuario_id: userId,
+                        permissao_id: perm.permissao_id,
+                        can_create: perm.can_create,
+                        can_read: perm.can_read,
+                        can_update: perm.can_update,
+                        can_delete: perm.can_delete,
+                    })),
+                    { transaction }
+                );
+            }
+    
+            // 3. Atualizar coleções
+            if (data.colecao) {
+                await amalfisCli.Colecao_usuarios.destroy({ where: { usuario_id: userId }, transaction });
+    
+                await amalfisCli.Colecao_usuarios.bulkCreate(
+                    data.colecao.map((colecao) => ({
+                        usuario_id: userId,
+                        colecao_id: colecao.id,
+                    })),
+                    { transaction }
+                );
+            }
+    
+            // 4. Atualizar clientes
+            if (data.clientes) {
+                await amalfisCli.Clientes_usuarios.destroy({ where: { usuario_id: userId }, transaction });
+    
+                await amalfisCli.Clientes_usuarios.bulkCreate(
+                    data.clientes.map((cliente) => ({
+                        usuario_id: userId,
+                        cliente_id: cliente.id,
+                    })),
+                    { transaction }
+                );
+            }
+    
+            // Commit da transação
+            await transaction.commit();
+            return { status: true };
+        } catch (error) {
+            await transaction.rollback();
+            console.error('Erro ao atualizar usuário:', error);
+            return { status: false, message: 'Erro ao atualizar usuário' };
+        }
+    }
+    
+    
 
     async cadastraUsuario_Services(bodyReq, permissoesCRUD) {
         const transaction = await sequelizeAmalfisCli.transaction(); // Inicia a transação

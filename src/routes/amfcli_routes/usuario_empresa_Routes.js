@@ -14,4 +14,8 @@ route.put('/api/empresas/:empresaId/usuarios/:usuarioId', checkTokenLogin, (req,
 // Rota para excluir um usuário de uma empresa
 route.delete('/api/empresas/:empresaId/usuarios/:usuarioId', checkTokenLogin, (req, res) => usuario_empresa_controller.deletaUsuarioEmpresa_Controller(req, res));
 
+route.post('/api/empresas/:empresaId/usuarios/:usuarioId', checkTokenLogin, (req, res) => usuario_empresa_controller.adicionaUsuarioEmpresa_Controller(req, res));
+
+route.get('/api/usuarios/disponiveis', checkTokenLogin, (req, res) => usuario_empresa_controller.pegaUsuariosDisponiveis_Controller(req, res));
+
 module.exports = route;

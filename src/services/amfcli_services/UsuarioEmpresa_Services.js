@@ -36,6 +36,37 @@ class UsuarioEmpresa_Services {
 
         return usuarioExcluido;
     }
+
+    // Serviço para adicionar um usuário a uma empresa
+    async adicionaUsuarioEmpresa_Services(empresaId, usuarioId) {
+        const usuarioEmpresaExistente = await amalfisCli.Usuario_Empresa.findOne({
+        where: { usuario_id: usuarioId, empresa_id: empresaId }
+        });
+    
+        if (usuarioEmpresaExistente) {
+        return { error: true, message: 'Usuário já vinculado a esta empresa' };
+        }
+    
+        const novoVinculo = await amalfisCli.Usuario_Empresa.create({
+        usuario_id: usuarioId,
+        empresa_id: empresaId
+        });
+    
+        return novoVinculo;
+  }
+
+  async pegaUsuariosDisponiveis_Services() {
+    const usuarios = await amalfisCli.Usuario.findAll({
+        include: [{
+            model: amalfisCli.Empresa,
+            as: 'empresas',
+            required: false,
+            where: { id: null }  // Somente usuários que não estão vinculados a nenhuma empresa
+        }]
+    });
+    return usuarios;
+}
+  
 }
 
 module.exports = UsuarioEmpresa_Services;

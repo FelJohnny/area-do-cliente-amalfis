@@ -9,6 +9,21 @@ class Usuario_Controller extends Controller{
         super(usuario_services,camposObrigatorios)
     }
 
+    
+    // Controller para buscar todos os usuários
+    async pegaTodosUsuarios_Controller(req, res) {
+        try {
+            const usuarios = await usuario_services.pegaTodosUsuarios_Services();
+            if (!usuarios.status) {
+                return res.status(400).json({ message: `Nenhum usuário encontrado`, error: true });
+            }
+            return res.status(200).json(usuarios);
+        } catch (error) {
+            console.log(error);
+            return res.status(500).json({ message: `Erro ao buscar registros, contate o administrador do sistema` });
+        }
+    }
+
     async pegaUsuarioPorId_Controller(req,res){
         const {id} = req.params;
         try {
@@ -20,6 +35,63 @@ class Usuario_Controller extends Controller{
             return res.status(500).json({ message: `erro ao buscar registro, contate o administrador do sistema` });
         }
 
+    }
+
+    async atualizaUsuario_Controller(req, res) {
+        const { id } = req.params;
+        const { nome, email, cargo, permissoesCRUD, empresa_id, colecao, clientes } = req.body;
+        
+        try {    
+            // Validação das permissões CRUD
+            const invalidPermissoes = permissoesCRUD.some((permissao) =>
+                !permissao.permissao_id ||
+                typeof permissao.can_create === 'undefined' ||
+                typeof permissao.can_read === 'undefined' ||
+                typeof permissao.can_update === 'undefined' ||
+                typeof permissao.can_delete === 'undefined'
+            );
+    
+            console.log('a');
+            
+            if (invalidPermissoes) {
+                
+                return res.status(400).json({
+                    message: 'As permissões CRUD fornecidas estão incompletas ou inválidas',
+                    error: true,
+                });
+            }
+    
+            // Atualiza usuário chamando o serviço
+            const result = await usuario_services.atualizaUsuario_Services(id, {
+                nome,
+                email,
+                cargo,
+                empresa_id,
+                permissoesCRUD,
+                colecao,
+                clientes,
+            });
+    
+            console.log(result);
+            
+            if (result.status) {
+                return res.status(200).json({
+                    message: 'Usuário atualizado com sucesso!',
+                    error: false,
+                });
+            } else {
+                return res.status(500).json({
+                    message: result.message || 'Erro ao atualizar o usuário',
+                    error: true,
+                });
+            }
+        } catch (error) {
+            console.error(error);
+            return res.status(500).json({
+                message: 'Erro no servidor, contate o administrador do sistema',
+                error: true,
+            });
+        }
     }
 
     async registerUsuario_Controller(req, res) {
@@ -114,8 +186,6 @@ class Usuario_Controller extends Controller{
             });
         }
     }
-    
-    
 
     async loginUsuario_Controller(req,res){
         const {email, senha} = req.body;
@@ -137,6 +207,8 @@ class Usuario_Controller extends Controller{
 
     async deletaUsuarioPorId_Controller(req,res){
         const { id } = req.params;
+        console.log(id);
+        
         try {
             const usuario = await usuario_services.deletaUsuarioPorId_Services(id);
             if(usuario === 0){

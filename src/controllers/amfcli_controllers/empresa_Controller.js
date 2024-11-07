@@ -73,10 +73,10 @@ class Empresa_Controller extends Controller {
         const { id } = req.params;
         try {
             const empresa = await empresa_services.deletaEmpresaPorId_Services(id);
-            if (empresa === 0) {
-                return res.status(400).json({ message: `Empresa com o ID ${id} não encontrada`, error: true });
+            if (empresa.error) {
+                return res.status(400).json({ message: empresa.message, error: true });
             } else {
-                return res.status(200).json({ message: `Empresa com o ID ${id} deletada com sucesso`, error: false });
+                return res.status(200).json({ message: empresa.message, error: false });
             }
         } catch (e) {
             console.log(e);
@@ -88,8 +88,8 @@ class Empresa_Controller extends Controller {
     async atualizaEmpresaPorId_Controller(req, res) {
         const { id } = req.params;
         try {
-            const { nome, descricao, endereco } = req.body;
-            const empresaAtualizada = await empresa_services.atualizaEmpresaPorId_Services(id, { nome, descricao, endereco });
+            const { nome, descricao, endereco, cnpj } = req.body;
+            const empresaAtualizada = await empresa_services.atualizaEmpresaPorId_Services(id, { nome, descricao, endereco, cnpj });
             if (!empresaAtualizada) {
                 return res.status(404).json({ message: `Empresa com o ID ${id} não encontrada` });
             }

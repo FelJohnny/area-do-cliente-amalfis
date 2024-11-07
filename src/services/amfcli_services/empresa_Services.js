@@ -42,13 +42,20 @@ class Empresa_Services extends Services {
 
     // Deletar empresa por ID
     async deletaEmpresaPorId_Services(id) {
-        return await amalfisCli[this.nomeModel].destroy({ where: { id: id } });
+        const usuario = await amalfisCli.Usuario_Empresa.findAll({where: {empresa_id: id}})
+        if(usuario.length){
+            return {error: true, message:'essa empresa possui usuarios vinculados, impossivel exclui-la '}
+        }else{            
+            const empresa = await amalfisCli[this.nomeModel].destroy({ where: { id: id } });
+            return {empresa:empresa, error: false, message:'empresa deletada com sucesso'}
+        }
+        
     }
 
     // Atualizar empresa por ID
     async atualizaEmpresaPorId_Services(id, dados) {
         const empresa = await amalfisCli[this.nomeModel].findByPk(id);
-
+        
         if (!empresa) {
             return null;
         }
