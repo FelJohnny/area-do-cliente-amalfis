@@ -20,6 +20,11 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey:'codcli',
         as:'cli_contatos'
       })
+
+      Entidade_001.belongsTo(models.Reg_estado_001,{
+        foreignKey:'reg_estado',
+        as:'regiao_cli',
+      })
     }
 
     
@@ -35,6 +40,7 @@ module.exports = (sequelize, DataTypes) => {
     cnpj: DataTypes.STRING,
     num_rg: DataTypes.STRING,
     grupo: DataTypes.STRING,
+    reg_estado: DataTypes.STRING
   }, {
     sequelize,
     modelName: 'Entidade_001',

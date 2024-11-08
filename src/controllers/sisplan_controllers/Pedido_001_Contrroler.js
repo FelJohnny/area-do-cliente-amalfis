@@ -33,12 +33,25 @@ class Pedido_001_Controller extends Controller{
         ClientesPusuario.forEach(cliente => {
           codcliArray.push(cliente.dataValues.codcli);
         });
+
+        //consultando regiões cadastradas nos clientes vinculados ao usuario // para filtros do frontend
+        const RegiaoPusuario = await sisplan.Entidade_001.findAll({
+          where:{codcli:codcliArray},
+          attributes:[],
+          include:{
+            model: sisplan.Reg_estado_001,
+            as: 'regiao_cli',
+            attributes:['codigo','descricao','obs'],
+        },
+        })
         
+
         //consultando os coleções que estão vinculados no usuario
         const ColecoesPusuario = await amalfisCli.Colecao_usuarios.findAll({
           where:{usuario_id:id},
           attributes:['codigo']
         });
+
 
         const colecaoArray = []
         ColecoesPusuario.forEach(colecao => {
@@ -73,7 +86,7 @@ class Pedido_001_Controller extends Controller{
           return res.status(400).json({message:`não foi possivel encontrar os pedidos`});
         }else{
 
-          return res.status(200).json({pedidos:pedidos,paginacao});
+          return res.status(200).json({pedidos:pedidos,regioes:RegiaoPusuario,clientes: codcliArray,paginacao,});
         }
       } catch (erro){
         console.log(erro);

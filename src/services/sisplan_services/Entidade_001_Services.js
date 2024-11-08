@@ -8,13 +8,20 @@ class Entidade_001_Services extends Services{
 
     async pegaEntidadePorCodCli_Services(codcli){
         const retorno = await sisplan.Entidade_001.findAll({
-            attributes:['codcli','nome','email','telefone','cnpj','num_rg','grupo'],
+            attributes:['codcli','nome','email','telefone','cnpj','num_rg','grupo','reg_estado'],
             where:{codcli: codcli},
-            include:{
-                model: sisplan.Contato_001,
-                as: 'cli_contatos',
-                attributes:['id','nome','numero','email','celular','tipo','tipo_contato'],
-            },
+            include:[
+                {
+                    model: sisplan.Contato_001,
+                    as: 'cli_contatos',
+                    attributes:['id','nome','numero','email','celular','tipo','tipo_contato'],
+                },
+                {
+                    model: sisplan.Reg_estado_001,
+                    as: 'regiao_cli',
+                    attributes:['codigo','descricao','obs'],
+                },
+            ]
         })
         if(retorno.length === 0){
             console.log('registro não encontrado na base de dados');

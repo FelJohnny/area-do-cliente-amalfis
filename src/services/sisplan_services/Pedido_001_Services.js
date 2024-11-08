@@ -62,6 +62,43 @@ class Pedido_001_Services extends Services {
         }
     }
 
+    async pegaPedidosFiltradosPorCodCliEColecao_Service(codcliArray, colecaoFiltroArray, infoLimit, limit, regiaoFiltro) {
+        const whereClause = {
+            codcli: { [Op.in]: codcliArray },
+            ...(colecaoFiltroArray.length > 0 && { colecao: { [Op.in]: colecaoFiltroArray } })
+        };
+    
+        const pedidos = await db.sisplan.Pedido_001.findAll({
+            attributes: ['codcli', 'numero', 'ped_cli', 'codrep', 'dt_emissao', 'dt_fatura', 'dt_saida', 'entrega', 'nota', 'deposito'],
+            include: [
+                {
+                    model: db.sisplan.Entidade_001,
+                    as: 'info_cliente',
+                    attributes: ['nome', 'email', 'telefone', 'cnpj', 'num_rg'],
+                    include: [
+                        {
+                            model: db.sisplan.Reg_estado_001,
+                            as: 'regiao_cli',
+                            attributes: ['codigo', 'descricao', 'obs'],
+                            where: regiaoFiltro ? { codigo: regiaoFiltro } : undefined // Aplica o filtro de região apenas se `regiaoFiltro` for fornecido
+                        }
+                    ]
+                },
+                {
+                    model: db.sisplan.Sitprod_001,
+                    as: 'situacao_pedido',
+                    attributes: ['codigo', 'descricao'],
+                }
+            ],
+            where: whereClause,
+            offset: Number(infoLimit),
+            limit: Number(limit),
+            order: [['numero', 'DESC']],
+        });
+    
+        return pedidos.length === 0 ? { error: true, retorno: [] } : { error: false, retorno: pedidos };
+    }
+    
     async pegaUmPedidoPorCodCli_Service(codcli, pedido){
         const pedidos = await db.sisplan.Pedido_001.findAll({
             attributes:['codcli', 'numero', 'ped_cli', 'codrep', 'dt_emissao', 'dt_fatura', 'dt_saida', 'entrega', 'nota', 'deposito'],
