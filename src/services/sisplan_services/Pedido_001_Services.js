@@ -62,42 +62,71 @@ class Pedido_001_Services extends Services {
         }
     }
 
-    async pegaPedidosFiltradosPorCodCliEColecao_Service(codcliArray, colecaoFiltroArray, infoLimit, limit, regiaoFiltro) {
-        const whereClause = {
-            codcli: { [Op.in]: codcliArray },
-            ...(colecaoFiltroArray.length > 0 && { colecao: { [Op.in]: colecaoFiltroArray } })
+    async pegaPedidosFiltradosPorCodCliEColecao_Service(codcli, colecao, infoLimit, limit, regiaoFiltro) {    
+        // Configura o include do info_cliente dinamicamente
+        const includeInfoCliente = {
+            model: db.sisplan.Entidade_001,
+            as: 'info_cliente',
+            attributes: ['nome', 'email', 'telefone', 'cnpj', 'num_rg'],
         };
     
+        // Adiciona a condição ao where apenas se regiaoFiltro tiver valores
+        if (Array.isArray(regiaoFiltro) && regiaoFiltro.length > 0) {
+            includeInfoCliente.where = { reg_estado: regiaoFiltro };
+        }
+    
         const pedidos = await db.sisplan.Pedido_001.findAll({
-            attributes: ['codcli', 'numero', 'ped_cli', 'codrep', 'dt_emissao', 'dt_fatura', 'dt_saida', 'entrega', 'nota', 'deposito'],
+            attributes: [
+                'codcli', 'numero', 'ped_cli', 'codrep', 'dt_emissao',
+                'dt_fatura', 'dt_saida', 'entrega', 'nota', 'deposito'
+            ],
             include: [
-                {
-                    model: db.sisplan.Entidade_001,
-                    as: 'info_cliente',
-                    attributes: ['nome', 'email', 'telefone', 'cnpj', 'num_rg'],
-                    include: [
-                        {
-                            model: db.sisplan.Reg_estado_001,
-                            as: 'regiao_cli',
-                            attributes: ['codigo', 'descricao', 'obs'],
-                            where: regiaoFiltro ? { codigo: regiaoFiltro } : undefined // Aplica o filtro de região apenas se `regiaoFiltro` for fornecido
-                        }
-                    ]
-                },
+                includeInfoCliente,
                 {
                     model: db.sisplan.Sitprod_001,
                     as: 'situacao_pedido',
                     attributes: ['codigo', 'descricao'],
-                }
+                },
             ],
-            where: whereClause,
+            where: { codcli: codcli, colecao: colecao },
             offset: Number(infoLimit),
             limit: Number(limit),
             order: [['numero', 'DESC']],
         });
     
-        return pedidos.length === 0 ? { error: true, retorno: [] } : { error: false, retorno: pedidos };
+        // Array para armazenar os números dos pedidos Encontrados
+        const pedidosEncontrados = pedidos.map(pedido => pedido.numero);
+    
+        // Consulta para buscar os itens do pedido usando os números dos pedidosEncontrados
+        const itensPedido = await db.sisplan.Ped_iten_001.findAll({
+            attributes: ['numero', 'codigo', 'tam', 'cor', 'qtde', 'qtde_f', 'preco'],
+            where: { numero: pedidosEncontrados },
+            order: [
+                ['codigo', 'ASC'],
+                ['tam', 'ASC']
+            ],
+            include: [{
+                model: db.sisplan.Produto_001,
+                as: 'detalhes_produto',
+                attributes: ['descricao', 'descricao2', 'unidade', 'estoque'],
+            }],
+        });
+    
+        // Adicionando os itens de pedido aos resultados dos pedidos
+        const pedidosComItens = pedidos.map(pedido => {
+            pedido.dataValues.itens_pedido = itensPedido.filter(item => item.numero === pedido.numero);
+            return pedido;
+        });
+    
+        if (pedidosComItens.length === 0) {
+            console.log('Nenhum registro encontrado na base de dados.');
+            return { error: true, retorno: pedidosComItens };
+        } else {
+            console.log('Registros encontrados na base de dados.');
+            return { retorno: pedidosComItens, error: false };
+        }
     }
+    
     
     async pegaUmPedidoPorCodCli_Service(codcli, pedido){
         const pedidos = await db.sisplan.Pedido_001.findAll({
