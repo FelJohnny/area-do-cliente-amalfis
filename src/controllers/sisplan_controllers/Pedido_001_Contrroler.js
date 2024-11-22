@@ -3,6 +3,7 @@ const Controller = require('../Controller.js');
 const Pedido_001_Services = require('../../services/sisplan_services/Pedido_001_Services.js');
 const Clientes_Usuario_Services = require('../../services/amfcli_services/clientes_usuario_Services.js')
 const {sisplan, amalfisCli} = require('../../models/index.js')
+const { Op } = require("sequelize");
 const nodemailer = require("nodemailer") ;
 const dotenv = require('dotenv');
 const fs = require('fs');
@@ -33,12 +34,25 @@ class Pedido_001_Controller extends Controller{
         ClientesPusuario.forEach(cliente => {
           codcliArray.push(cliente.dataValues.codcli);
         });
+
+        //consultando regiões cadastradas nos clientes vinculados ao usuario // para filtros do frontend
+        const RegiaoPusuario = await sisplan.Entidade_001.findAll({
+          where:{codcli:codcliArray},
+          attributes:[],
+          include:{
+            model: sisplan.Reg_estado_001,
+            as: 'regiao_cli',
+            attributes:['codigo','descricao','obs'],
+        },
+        })
         
+
         //consultando os coleções que estão vinculados no usuario
         const ColecoesPusuario = await amalfisCli.Colecao_usuarios.findAll({
           where:{usuario_id:id},
           attributes:['codigo']
         });
+
 
         const colecaoArray = []
         ColecoesPusuario.forEach(colecao => {
@@ -73,13 +87,109 @@ class Pedido_001_Controller extends Controller{
           return res.status(400).json({message:`não foi possivel encontrar os pedidos`});
         }else{
 
-          return res.status(200).json({pedidos:pedidos,paginacao});
+          return res.status(200).json({pedidos:pedidos,regioes:RegiaoPusuario,clientes: codcliArray,paginacao,});
         }
       } catch (erro){
         console.log(erro);
         return res.status(500).json({ message: `erro ao buscar os pedidos` });
       }
     }
+
+    async pegaPedidoComFiltro(req,res){
+
+      
+      try {
+        
+        const { id } = req.params;
+        //filtros em array
+        const { regiaoFiltro = [] } = req.body;
+
+        //PAGINACAO
+        const { page = 1 } = req.query;
+        //limite de registros em cada pagina
+        const limit = 9;
+        var lastPage = 1;
+
+        //consultando os clientes que estão vinculados no usuario
+        const ClientesPusuario = await amalfisCli.Clientes_usuarios.findAll({
+          where:{
+            usuario_id:id
+          },
+          attributes:['codcli']
+        })
+        const codcliArray = [];
+        ClientesPusuario.forEach(cliente => {
+          codcliArray.push(cliente.dataValues.codcli);
+        });        
+
+        //consultando os coleções que estão vinculados no usuario
+        const ColecoesPusuario = await amalfisCli.Colecao_usuarios.findAll({
+          where:{usuario_id:id},
+          attributes:['codigo']
+        });
+        const colecaoArray = []
+        ColecoesPusuario.forEach(colecao => {
+          colecaoArray.push(colecao.dataValues.codigo);
+        });
+
+        let countPedidos
+        let codcliArrayFiltro = [];
+        //consultando quantidade de pedidos encontrados por codcli e colecao
+        if (Array.isArray(regiaoFiltro) && regiaoFiltro.length > 0) {
+
+          const whereCondition = {
+            codcli: codcliArray,
+            reg_estado: { [Op.in]: regiaoFiltro }, // Aplica apenas se regiaoFiltro tiver valores
+          };
+
+          const entidadeFiltrada = await sisplan.Entidade_001.findAll({
+            attributes: ["codcli"],
+            where: whereCondition,
+          });
+        
+          entidadeFiltrada.forEach((cliente) => {
+            codcliArrayFiltro.push(cliente.dataValues.codcli);
+          });               
+
+          countPedidos = await sisplan.Pedido_001.count({where:{codcli: codcliArrayFiltro,colecao:colecaoArray}})
+          
+        }else{
+          countPedidos = await sisplan.Pedido_001.count({where:{codcli: codcliArray,colecao:colecaoArray}})
+
+        }
+
+        //valida contagem
+        if(countPedidos !== 0){
+          lastPage = Math.ceil(countPedidos  / limit)
+          
+          //Criando objeto com as informações de paginacao
+          var paginacao ={
+            //caminho
+            path: '/api/pedido/cliente/usuario-id/',
+            total_Pedidos:countPedidos,
+            limit_por_page:limit,
+            current_page:page,
+            total_Pages:lastPage,
+            prev_page_url: page - 1 >= 1 ? page -1: false,
+            next_page_url: Number(page) + Number(1) > lastPage ? false : Number(page) + 1,
+          }
+        }else{
+          return res.status(400).json({message:`não foi possivel encontrar os pedidos`});
+        }
+        const infoLimit = (page * limit) - limit
+
+        const pedidos = await pedido_001_services.pegaPedidosFiltradosPorCodCliEColecao_Service(codcliArrayFiltro.length ? codcliArrayFiltro : codcliArray,colecaoArray,infoLimit,limit,regiaoFiltro);
+        if(pedidos.retorno.length === 0){
+          return res.status(400).json({message:`não foi possivel encontrar os pedidos`});
+        }else{
+          return res.status(200).json({pedidos:pedidos,clientes: codcliArrayFiltro.length ? codcliArrayFiltro : codcliArray,paginacao,});
+        }
+      } catch (error) {
+        console.log(error);
+        return res.status(500).json({ message: `erro ao buscar os pedidos` });
+      }
+    }
+
 
     async pegaUmPedidoPorCodCli_Controller(req, res) {
       

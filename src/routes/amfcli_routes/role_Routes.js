@@ -14,6 +14,10 @@ route.get('/api/roles/:id',checkTokenLogin,(req,res)=> role_controller.pegaRoleP
 
 route.delete('/api/roles/:id',checkTokenLogin, (req,res)=>role_controller.deletaRolePorId_Controller(req,res))
 
+// rota para buscar permissões associadas a uma role
+route.get('/api/roles/:id/permissoes', checkTokenLogin, (req, res) => role_controller.pegaPermissoesPorRole_Controller(req, res));
+
+
 //route.put('/api/roles/:id',checkTokenLogin, )
 
 module.exports= route

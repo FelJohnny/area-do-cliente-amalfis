@@ -7,26 +7,27 @@ class Permissao_Services extends Services{
         super('Permissao')
     }
 
-    async criaPermissao_Services(dados){
-        const permissao = await amalfisCli[this.nomeModel].findOne({
-            where:{
+    async criaPermissao_Services(dados) {
+        const permissaoExistente = await amalfisCli[this.nomeModel].findOne({
+            where: {
                 nome: dados.nome
             }
-        })        
-
-        if(permissao !== null){
-            console.log('já existe uma permissao com o nome informado');
-            return {error:true, permissao: permissao};
-        }else{
+        });
+    
+        if (permissaoExistente !== null) {
+            console.log('Já existe uma permissão com o nome informado');
+            return { error: true, permissao: permissaoExistente };
+        } else {
             const newPermissao = await amalfisCli[this.nomeModel].create({
                 id: uuid.v4(),
                 nome: dados.nome,
                 descricao: dados.descricao,
-            })
-            return {error:false, permissao: newPermissao};
-
+            });
+            return { error: false, permissao: newPermissao };  // Retorna o objeto correto
         }
     }
+    
+    
 
     async pegaTodosPermissao_Services(){
         return await amalfisCli[this.nomeModel].findAll();

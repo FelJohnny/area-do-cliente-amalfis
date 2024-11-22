@@ -24,6 +24,17 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey:'usuario_id',
         as:'usuario_colecoes',
       })
+      usuarios.hasMany(models.UserPermissionAccess, {
+        foreignKey: 'usuario_id',
+        as: 'user_permissions_access'
+      });
+
+      usuarios.belongsToMany(models.Empresa, {
+        through: models.Usuario_Empresa,
+        as: 'empresas',
+        foreignKey: 'usuario_id',
+      });
+      
     }
   }
   usuarios.init({
