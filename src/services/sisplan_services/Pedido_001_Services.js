@@ -62,7 +62,7 @@ class Pedido_001_Services extends Services {
         }
     }
 
-    async pegaPedidosFiltradosPorCodCliEColecao_Service(codcli, colecao, infoLimit, limit, regiaoFiltro) {    
+    async pegaPedidosFiltradosPorCodCliEColecao_Service(codcli, colecao, infoLimit, limit, regiaoFiltro, filtroNumPed) {
         // Configura o include do info_cliente dinamicamente
         const includeInfoCliente = {
             model: db.sisplan.Entidade_001,
@@ -75,6 +75,20 @@ class Pedido_001_Services extends Services {
             includeInfoCliente.where = { reg_estado: regiaoFiltro };
         }
     
+        // Configura o filtro condicional para ped_cli
+        const whereCondition = {
+            codcli: codcli,
+            colecao: colecao,
+        };
+    
+        // Adiciona a busca parcial em ped_cli somente se filtroNumPed for informado
+        if (filtroNumPed && filtroNumPed.trim() !== '') {
+            whereCondition.ped_cli = {
+                [db.Sequelize.Op.like]: `%${filtroNumPed}%`, // Busca parcial
+            };
+        }
+    
+        // Consulta os pedidos
         const pedidos = await db.sisplan.Pedido_001.findAll({
             attributes: [
                 'codcli', 'numero', 'ped_cli', 'codrep', 'dt_emissao',
@@ -88,13 +102,13 @@ class Pedido_001_Services extends Services {
                     attributes: ['codigo', 'descricao'],
                 },
             ],
-            where: { codcli: codcli, colecao: colecao },
+            where: whereCondition,
             offset: Number(infoLimit),
             limit: Number(limit),
             order: [['numero', 'DESC']],
         });
     
-        // Array para armazenar os números dos pedidos Encontrados
+        // Array para armazenar os números dos pedidos encontrados
         const pedidosEncontrados = pedidos.map(pedido => pedido.numero);
     
         // Consulta para buscar os itens do pedido usando os números dos pedidosEncontrados
@@ -126,6 +140,8 @@ class Pedido_001_Services extends Services {
             return { retorno: pedidosComItens, error: false };
         }
     }
+    
+    
     
     
     async pegaUmPedidoPorCodCli_Service(codcli, pedido){
