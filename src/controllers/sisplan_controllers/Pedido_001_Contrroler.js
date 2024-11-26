@@ -95,100 +95,108 @@ class Pedido_001_Controller extends Controller{
       }
     }
 
-    async pegaPedidoComFiltro(req,res){
-
-      
+    async pegaPedidoComFiltro(req, res) {
       try {
-        
         const { id } = req.params;
-        //filtros em array
-        const { regiaoFiltro = [] } = req.body;
-
-        //PAGINACAO
+        const { regiaoFiltro = [], clienteFiltro = [], filtroNumPed = '' } = req.body;
         const { page = 1 } = req.query;
-        //limite de registros em cada pagina
         const limit = 9;
-        var lastPage = 1;
-
-        //consultando os clientes que estão vinculados no usuario
-        const ClientesPusuario = await amalfisCli.Clientes_usuarios.findAll({
-          where:{
-            usuario_id:id
-          },
-          attributes:['codcli']
-        })
-        const codcliArray = [];
-        ClientesPusuario.forEach(cliente => {
-          codcliArray.push(cliente.dataValues.codcli);
-        });        
-
-        //consultando os coleções que estão vinculados no usuario
-        const ColecoesPusuario = await amalfisCli.Colecao_usuarios.findAll({
-          where:{usuario_id:id},
-          attributes:['codigo']
-        });
-        const colecaoArray = []
-        ColecoesPusuario.forEach(colecao => {
-          colecaoArray.push(colecao.dataValues.codigo);
-        });
-
-        let countPedidos
-        let codcliArrayFiltro = [];
-        //consultando quantidade de pedidos encontrados por codcli e colecao
-        if (Array.isArray(regiaoFiltro) && regiaoFiltro.length > 0) {
-
-          const whereCondition = {
-            codcli: codcliArray,
-            reg_estado: { [Op.in]: regiaoFiltro }, // Aplica apenas se regiaoFiltro tiver valores
-          };
-
-          const entidadeFiltrada = await sisplan.Entidade_001.findAll({
-            attributes: ["codcli"],
-            where: whereCondition,
-          });
+        let lastPage = 1;
         
-          entidadeFiltrada.forEach((cliente) => {
-            codcliArrayFiltro.push(cliente.dataValues.codcli);
-          });               
-
-          countPedidos = await sisplan.Pedido_001.count({where:{codcli: codcliArrayFiltro,colecao:colecaoArray}})
-          
-        }else{
-          countPedidos = await sisplan.Pedido_001.count({where:{codcli: codcliArray,colecao:colecaoArray}})
-
+        // Consultar clientes vinculados ao usuário
+        const ClientesPusuario = await amalfisCli.Clientes_usuarios.findAll({
+          where: { usuario_id: id },
+          attributes: ['codcli'],
+        });
+    
+        const codcliArray = ClientesPusuario.map((cliente) => cliente.dataValues.codcli);
+    
+        // Consultar coleções vinculadas ao usuário
+        const ColecoesPusuario = await amalfisCli.Colecao_usuarios.findAll({
+          where: { usuario_id: id },
+          attributes: ['codigo'],
+        });
+    
+        const colecaoArray = ColecoesPusuario.map((colecao) => colecao.dataValues.codigo);
+    
+        // Lógica para construir a lista de clientes a partir dos filtros
+        let codcliArrayFiltro = [...codcliArray];
+    
+        if (Array.isArray(clienteFiltro) && clienteFiltro.length > 0) {
+          // Se clienteFiltro estiver definido, use apenas os clientes no filtro
+          codcliArrayFiltro = codcliArrayFiltro.filter((codcli) => clienteFiltro.includes(codcli));
         }
-
-        //valida contagem
-        if(countPedidos !== 0){
-          lastPage = Math.ceil(countPedidos  / limit)
-          
-          //Criando objeto com as informações de paginacao
-          var paginacao ={
-            //caminho
-            path: '/api/pedido/cliente/usuario-id/',
-            total_Pedidos:countPedidos,
-            limit_por_page:limit,
-            current_page:page,
-            total_Pages:lastPage,
-            prev_page_url: page - 1 >= 1 ? page -1: false,
-            next_page_url: Number(page) + Number(1) > lastPage ? false : Number(page) + 1,
-          }
-        }else{
-          return res.status(400).json({message:`não foi possivel encontrar os pedidos`});
+    
+        if (Array.isArray(regiaoFiltro) && regiaoFiltro.length > 0) {
+          // Filtrar entidades por região
+          const entidadesFiltradas = await sisplan.Entidade_001.findAll({
+            attributes: ['codcli'],
+            where: {
+              codcli: codcliArrayFiltro,
+              reg_estado: { [Op.in]: regiaoFiltro },
+            },
+          });
+    
+          // Atualizar `codcliArrayFiltro` com base nas regiões
+          codcliArrayFiltro = entidadesFiltradas.map((entidade) => entidade.dataValues.codcli);
         }
-        const infoLimit = (page * limit) - limit
-
-        const pedidos = await pedido_001_services.pegaPedidosFiltradosPorCodCliEColecao_Service(codcliArrayFiltro.length ? codcliArrayFiltro : codcliArray,colecaoArray,infoLimit,limit,regiaoFiltro);
-        if(pedidos.retorno.length === 0){
-          return res.status(400).json({message:`não foi possivel encontrar os pedidos`});
-        }else{
-          return res.status(200).json({pedidos:pedidos,clientes: codcliArrayFiltro.length ? codcliArrayFiltro : codcliArray,paginacao,});
+    
+        // Contar pedidos com base nos filtros aplicados
+        const countPedidos = await sisplan.Pedido_001.count({
+          where: {
+            codcli: codcliArrayFiltro,
+            colecao: colecaoArray,
+            ...(filtroNumPed && filtroNumPed.trim() !== '' && {
+              ped_cli: { [Op.like]: `%${filtroNumPed}%` }, // Filtro parcial
+            }),
+          },
+        });
+    
+        if (countPedidos === 0) {
+          return res.status(400).json({ message: 'Não foi possível encontrar os pedidos' });
         }
+    
+        lastPage = Math.ceil(countPedidos / limit);
+    
+        // Configuração de paginação
+        const paginacao = {
+          path: '/api/pedido/cliente/usuario-id/',
+          total_Pedidos: countPedidos,
+          limit_por_page: limit,
+          current_page: page,
+          total_Pages: lastPage,
+          prev_page_url: page - 1 >= 1 ? page - 1 : false,
+          next_page_url: Number(page) + 1 > lastPage ? false : Number(page) + 1,
+        };
+    
+        // Calcular offset para paginação
+        const infoLimit = (page - 1) * limit;
+    
+        // Buscar pedidos com os filtros aplicados
+        const pedidos = await pedido_001_services.pegaPedidosFiltradosPorCodCliEColecao_Service(
+          codcliArrayFiltro,
+          colecaoArray,
+          infoLimit,
+          limit,
+          regiaoFiltro,
+          filtroNumPed
+        );
+    
+        if (pedidos.retorno.length === 0) {
+          return res.status(400).json({ message: 'Não foi possível encontrar os pedidos' });
+        }
+    
+        return res.status(200).json({
+          pedidos: pedidos,
+          clientes: codcliArrayFiltro,
+          paginacao,
+        });
       } catch (error) {
-        console.log(error);
-        return res.status(500).json({ message: `erro ao buscar os pedidos` });
+        console.error(error);
+        return res.status(500).json({ message: 'Erro ao buscar os pedidos' });
       }
     }
+    
 
 
     async pegaUmPedidoPorCodCli_Controller(req, res) {
